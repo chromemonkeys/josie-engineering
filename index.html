@@ -1229,97 +1229,71 @@ function createUnderwaterScene() {
     }
   }
 
-  // Simple crab with proper geometry
-  function createCrab(x, z, scale = 1) {
-    const crab = new THREE.Group();
-    const shellColor = 0xff4400;
-    const legColor = 0xff2200;
+  // Starfish - flat, colorful, easy to recognize
+  function createStarfish(x, z, scale = 1) {
+    const starfish = new THREE.Group();
     
-    // Main body - flattened sphere
-    const body = new THREE.Mesh(
-      new THREE.SphereGeometry(0.5, 8, 6),
-      new THREE.MeshLambertMaterial({ color: shellColor, flatShading: true })
+    // Colors - red, orange, pink, purple starfish
+    const colors = [0xff6b6b, 0xff8e53, 0xff6b9d, 0xc44569, 0xf8b500];
+    const color = colors[Math.floor(hash(x, z) * colors.length)];
+    const mat = new THREE.MeshLambertMaterial({ color: color, flatShading: true });
+    
+    // Central disk
+    const center = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.4, 0.4, 0.1, 8),
+      mat
     );
-    body.scale.set(1.2, 0.5, 0.9);
-    body.position.y = 0.15;
-    crab.add(body);
+    center.position.y = 0.05;
+    starfish.add(center);
     
-    // Eyes
-    const eyeMat = new THREE.MeshLambertMaterial({ color: 0x000000 });
-    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 5), eyeMat);
-    leftEye.position.set(-0.2, 0.45, 0.35);
-    crab.add(leftEye);
-    const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 5), eyeMat);
-    rightEye.position.set(0.2, 0.45, 0.35);
-    crab.add(rightEye);
-    
-    // Left claw
-    const clawMat = new THREE.MeshLambertMaterial({ color: shellColor });
-    const leftClaw = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.4), clawMat);
-    leftClaw.position.set(-0.7, 0.15, 0.3);
-    leftClaw.rotation.y = 0.3;
-    crab.add(leftClaw);
-    
-    // Right claw  
-    const rightClaw = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.4), clawMat);
-    rightClaw.position.set(0.7, 0.15, 0.3);
-    rightClaw.rotation.y = -0.3;
-    crab.add(rightClaw);
-    
-    // 6 legs
-    const legMat = new THREE.MeshLambertMaterial({ color: legColor });
-    for (let i = 0; i < 3; i++) {
-      // Left legs
-      const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.08), legMat);
-      leftLeg.position.set(-0.6, 0.05, -0.1 - i * 0.2);
-      leftLeg.rotation.z = 0.5 + i * 0.1;
-      crab.add(leftLeg);
+    // 5 arms radiating from center
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2;
       
-      // Right legs
-      const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.08), legMat);
-      rightLeg.position.set(0.6, 0.05, -0.1 - i * 0.2);
-      rightLeg.rotation.z = -0.5 - i * 0.1;
-      crab.add(rightLeg);
+      // Arm - tapered box
+      const arm = new THREE.Mesh(
+        new THREE.BoxGeometry(0.25, 0.08, 1.0),
+        mat
+      );
+      arm.position.set(
+        Math.cos(angle) * 0.6,
+        0.04,
+        Math.sin(angle) * 0.6
+      );
+      arm.rotation.y = -angle;
+      starfish.add(arm);
+      
+      // Taper the arm visually by adding a smaller end piece
+      const armTip = new THREE.Mesh(
+        new THREE.BoxGeometry(0.15, 0.06, 0.5),
+        mat
+      );
+      armTip.position.set(
+        Math.cos(angle) * 1.3,
+        0.03,
+        Math.sin(angle) * 1.3
+      );
+      armTip.rotation.y = -angle;
+      starfish.add(armTip);
     }
     
-    // Position entire crab
-    crab.position.set(x, -23.5, z);
-    crab.scale.set(scale, scale, scale);
-    crab.rotation.y = hash(x, z) * Math.PI * 2;
+    // Position on seabed
+    starfish.position.set(x, -23.5, z);
+    starfish.scale.set(scale, scale, scale);
+    starfish.rotation.y = hash(x, z) * Math.PI * 2;
     
-    return crab;
+    return starfish;
   }
   
-  // DEBUG: Add one giant test crab RIGHT at camera look position
-  // Camera looks at (55, -22, oceanZ+60) = (55, -22, -325)
-  // Place test crab at (55, -23, oceanZ+60) - directly in front of camera
-  const testCrab = createCrab(55, oceanZ + 60, 3.0); // Scale 3.0 = GIANT
-  testCrab.traverse((child) => {
-    if (child.isMesh) {
-      child.material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Bright red, unlit
-      child.material.fog = false;
-    }
-  });
-  ug.add(testCrab);
-  console.log('DEBUG: Added GIANT test crab at:', 55, -23.8, oceanZ + 60);
-  
-  // Add crabs around the monopile
-  console.log('DEBUG: Adding 30 crabs around monopile at x=60, z=' + (oceanZ + 60));
-  for (let i = 0; i < 30; i++) {
-    const angle = (i / 30) * Math.PI * 2 + hash(i * 17, i) * 0.3;
-    const radius = 2 + hash(i * 31, i * 47) * 4;
+  // Add starfish around the monopile
+  for (let i = 0; i < 15; i++) {
+    const angle = (i / 15) * Math.PI * 2 + hash(i * 17, i) * 0.3;
+    const radius = 3 + hash(i * 31, i * 47) * 8;
     const cx = 60 + Math.cos(angle) * radius;
     const cz = oceanZ + 60 + Math.sin(angle) * radius;
-    const scale = 1.0 + hash(i * 13, i) * 0.5; // HUGE crabs
-    const crab = createCrab(cx, cz, scale);
-    crab.traverse((child) => {
-      if (child.isMesh && child.material) {
-        child.material.fog = false;
-      }
-    });
-    ug.add(crab);
+    const scale = 0.8 + hash(i * 13, i) * 0.4;
+    ug.add(createStarfish(cx, cz, scale));
   }
-  console.log('DEBUG: Finished adding crabs');
 
   scene.add(ug);
   return ug;
