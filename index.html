@@ -1357,11 +1357,16 @@ function createUnderwaterScene() {
     return crab;
   }
   
-  // Add crabs scattered on seabed
-  for (let i = 0; i < 6; i++) {
-    const cx = (hash(i * 43, i * 67) - 0.5) * 80 + 50;
-    const cz = oceanZ + 60 + (hash(i * 71, i * 89) - 0.5) * 80;
-    const scale = 0.15 + hash(i * 13, i) * 0.1;
+  // Add crabs around the monopile where the camera is looking
+  // Monopile is at x=60, z=oceanZ+60 (approx -340)
+  // Camera looks at area around x=55, z=oceanZ+75 (approx -325)
+  for (let i = 0; i < 8; i++) {
+    // Place crabs in a 20-unit radius around the monopile base
+    const angle = (i / 8) * Math.PI * 2 + hash(i * 17, i) * 0.5;
+    const radius = 8 + hash(i * 31, i * 47) * 15;
+    const cx = 60 + Math.cos(angle) * radius;
+    const cz = oceanZ + 60 + Math.sin(angle) * radius;
+    const scale = 0.25 + hash(i * 13, i) * 0.15; // Larger crabs for visibility
     ug.add(createCrab(cx, cz, scale));
   }
 
