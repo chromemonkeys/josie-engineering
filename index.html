@@ -185,7 +185,7 @@
       right: 0;
       bottom: 0;
       height: calc(100vh - 60px);
-      background: rgba(12, 15, 19, 1);
+      background: rgba(12, 15, 19, 0.66);
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
@@ -1227,6 +1227,142 @@ function createUnderwaterScene() {
       blade.rotation.y = hash(i * b, i + b) * Math.PI;
       ug.add(blade);
     }
+  }
+
+  // Detailed crabs on seabed
+  function createCrab(x, z, scale = 1) {
+    const crab = new THREE.Group();
+    const shellColor = new THREE.Color().setHSL(0.05 + hash(x, z) * 0.08, 0.7, 0.4);
+    const legColor = new THREE.Color().setHSL(0.06 + hash(z, x) * 0.06, 0.6, 0.35);
+    
+    // Carapace (main shell) - oval shape
+    const carapace = new THREE.Mesh(
+      new THREE.SphereGeometry(0.5 * scale, 8, 6),
+      new THREE.MeshLambertMaterial({ color: shellColor, flatShading: true })
+    );
+    carapace.scale.set(1.3, 0.6, 1);
+    carapace.position.y = 0.2 * scale;
+    crab.add(carapace);
+    
+    // Eyes on stalks
+    const eyeStalkMat = new THREE.MeshLambertMaterial({ color: 0x333333, flatShading: true });
+    const eyeMat = new THREE.MeshLambertMaterial({ color: 0x111111, flatShading: true });
+    
+    const leftStalk = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.06 * scale, 0.35 * scale, 5), eyeStalkMat);
+    leftStalk.position.set(-0.25 * scale, 0.55 * scale, 0.35 * scale);
+    leftStalk.rotation.x = -0.3;
+    crab.add(leftStalk);
+    
+    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.08 * scale, 6, 5), eyeMat);
+    leftEye.position.set(-0.25 * scale, 0.7 * scale, 0.45 * scale);
+    crab.add(leftEye);
+    
+    const rightStalk = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.06 * scale, 0.35 * scale, 5), eyeStalkMat);
+    rightStalk.position.set(0.25 * scale, 0.55 * scale, 0.35 * scale);
+    rightStalk.rotation.x = -0.3;
+    crab.add(rightStalk);
+    
+    const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.08 * scale, 6, 5), eyeMat);
+    rightEye.position.set(0.25 * scale, 0.7 * scale, 0.45 * scale);
+    crab.add(rightEye);
+    
+    // Claws (chelipeds) - larger front legs
+    const clawMat = new THREE.MeshLambertMaterial({ color: shellColor, flatShading: true });
+    
+    // Left claw arm
+    const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * scale, 0.08 * scale, 0.5 * scale, 5), clawMat);
+    leftArm.position.set(-0.6 * scale, 0.15 * scale, 0.3 * scale);
+    leftArm.rotation.z = 0.5;
+    leftArm.rotation.x = 0.3;
+    crab.add(leftArm);
+    
+    // Left claw pincer
+    const leftPincerBase = new THREE.Mesh(new THREE.SphereGeometry(0.15 * scale, 6, 5), clawMat);
+    leftPincerBase.position.set(-0.8 * scale, 0.35 * scale, 0.45 * scale);
+    crab.add(leftPincerBase);
+    
+    const leftPincerTop = new THREE.Mesh(new THREE.ConeGeometry(0.08 * scale, 0.3 * scale, 4), clawMat);
+    leftPincerTop.position.set(-0.9 * scale, 0.45 * scale, 0.5 * scale);
+    leftPincerTop.rotation.z = 0.5;
+    leftPincerTop.rotation.y = 0.3;
+    crab.add(leftPincerTop);
+    
+    const leftPincerBottom = new THREE.Mesh(new THREE.ConeGeometry(0.06 * scale, 0.25 * scale, 4), clawMat);
+    leftPincerBottom.position.set(-0.85 * scale, 0.3 * scale, 0.5 * scale);
+    leftPincerBottom.rotation.z = -0.3;
+    leftPincerBottom.rotation.y = 0.3;
+    crab.add(leftPincerBottom);
+    
+    // Right claw arm
+    const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * scale, 0.08 * scale, 0.5 * scale, 5), clawMat);
+    rightArm.position.set(0.6 * scale, 0.15 * scale, 0.3 * scale);
+    rightArm.rotation.z = -0.5;
+    rightArm.rotation.x = 0.3;
+    crab.add(rightArm);
+    
+    // Right claw pincer
+    const rightPincerBase = new THREE.Mesh(new THREE.SphereGeometry(0.15 * scale, 6, 5), clawMat);
+    rightPincerBase.position.set(0.8 * scale, 0.35 * scale, 0.45 * scale);
+    crab.add(rightPincerBase);
+    
+    const rightPincerTop = new THREE.Mesh(new THREE.ConeGeometry(0.08 * scale, 0.3 * scale, 4), clawMat);
+    rightPincerTop.position.set(0.9 * scale, 0.45 * scale, 0.5 * scale);
+    rightPincerTop.rotation.z = -0.5;
+    rightPincerTop.rotation.y = -0.3;
+    crab.add(rightPincerTop);
+    
+    const rightPincerBottom = new THREE.Mesh(new THREE.ConeGeometry(0.06 * scale, 0.25 * scale, 4), clawMat);
+    rightPincerBottom.position.set(0.85 * scale, 0.3 * scale, 0.5 * scale);
+    rightPincerBottom.rotation.z = 0.3;
+    rightPincerBottom.rotation.y = -0.3;
+    crab.add(rightPincerBottom);
+    
+    // Walking legs - 3 pairs
+    const legMat = new THREE.MeshLambertMaterial({ color: legColor, flatShading: true });
+    
+    for (let side = -1; side <= 1; side += 2) {
+      for (let leg = 0; leg < 3; leg++) {
+        const legGroup = new THREE.Group();
+        
+        // Leg segments
+        const upperLeg = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.04 * scale, 0.05 * scale, 0.4 * scale, 4),
+          legMat
+        );
+        upperLeg.position.set(side * 0.45 * scale, 0.15 * scale, -0.2 * scale - leg * 0.25 * scale);
+        upperLeg.rotation.z = side * (0.4 + leg * 0.1);
+        upperLeg.rotation.x = 0.2;
+        legGroup.add(upperLeg);
+        
+        const lowerLeg = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.03 * scale, 0.04 * scale, 0.35 * scale, 4),
+          legMat
+        );
+        lowerLeg.position.set(
+          side * (0.65 + leg * 0.05) * scale,
+          0.05 * scale,
+          -0.35 * scale - leg * 0.25 * scale
+        );
+        lowerLeg.rotation.z = side * (0.8 + leg * 0.15);
+        legGroup.add(lowerLeg);
+        
+        crab.add(legGroup);
+      }
+    }
+    
+    // Position on seabed
+    crab.position.set(x, -23.8, z);
+    crab.rotation.y = hash(x, z) * Math.PI * 2;
+    
+    return crab;
+  }
+  
+  // Add crabs scattered on seabed
+  for (let i = 0; i < 6; i++) {
+    const cx = (hash(i * 43, i * 67) - 0.5) * 80 + 50;
+    const cz = oceanZ + 60 + (hash(i * 71, i * 89) - 0.5) * 80;
+    const scale = 0.15 + hash(i * 13, i) * 0.1;
+    ug.add(createCrab(cx, cz, scale));
   }
 
   scene.add(ug);
