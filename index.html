@@ -1042,39 +1042,86 @@ function createUnderwaterScene() {
     ug.add(rock);
   }
 
-  // Subsea cable — thick bright yellow cable from monopile to shore
-  const cableMat = new THREE.MeshLambertMaterial({ color: 0xffcc00, flatShading: true });
+  // Subsea cable — large diameter industrial power cable from monopile to shore
+  // Disable fog so cable is always visible, single-sided to avoid "two pipes" effect
+  const cableMat = new THREE.MeshLambertMaterial({ color: 0xffcc00, flatShading: true, fog: false });
+  cableMat.side = THREE.FrontSide;
   const cablePoints = [];
-  // Vertical drop from monopile base down to seabed
-  cablePoints.push(new THREE.Vector3(60, -20, oceanZ + 60));
-  cablePoints.push(new THREE.Vector3(60, -22, oceanZ + 60));
-  cablePoints.push(new THREE.Vector3(60, -24, oceanZ + 60));
-  // Run along seabed all the way to shore (z ≈ 30)
-  const cableSegs = 60;
-  const shoreZ = 30;
-  const startZ = oceanZ + 60;
+  // Cable connects at the transition piece (yellow section) of the monopile
+  // The monopile center is at y=-14, height=22, so it extends from y=-25 to y=3
+  // The transition piece is around y=0.5 (just above water at y=-2)
+  // J-tube cable entry point on the monopile
+  cablePoints.push(new THREE.Vector3(61.2, 0.5, oceanZ + 60));  // J-tube exit on monopile
+  cablePoints.push(new THREE.Vector3(61.8, -2, oceanZ + 60));   // Entering water
+  cablePoints.push(new THREE.Vector3(62, -5, oceanZ + 60));     // Descending
+  cablePoints.push(new THREE.Vector3(62, -10, oceanZ + 60));    // Approaching seabed
+  cablePoints.push(new THREE.Vector3(62, -15, oceanZ + 60));    // Deeper
+  cablePoints.push(new THREE.Vector3(62, -20, oceanZ + 60));    // Near seabed
+  // Seabed surface is around y=-23 to -24, cable sits ON TOP not below
+  cablePoints.push(new THREE.Vector3(62, -22.5, oceanZ + 60));  // Just above seabed
+  cablePoints.push(new THREE.Vector3(62, -23, oceanZ + 62));    // On seabed, moving away
+  cablePoints.push(new THREE.Vector3(62, -23, oceanZ + 65));    // Away from monopile, on surface
+
+  // Run along seabed all the way to shore
+  const cableSegs = 80;
+  const shoreZ = 35;
+  const startZ = oceanZ + 65;  // Start from where cable left off
   const totalDistance = shoreZ - startZ;
-  for (let i = 0; i <= cableSegs; i++) {
+  
+  // Get the last point of the vertical cable to ensure continuity
+  const cableStart = cablePoints[cablePoints.length - 1];
+
+  for (let i = 1; i <= cableSegs; i++) {  // Start from 1 since 0 would duplicate the last point
     const frac = i / cableSegs;
     const cz = startZ + frac * totalDistance;
-    // Curve toward shore, slightly meandering
-    const cx = 60 - frac * 20 + Math.sin(frac * Math.PI * 2) * 3;
-    // Seabed height with slight variation
-    const cy = -24 + Math.sin(cx * 0.05 + cz * 0.03) * 0.5;
+    // Curve from current x position (62) toward shore (around 38), with meandering
+    const targetX = 38;  // End near shore at x=38
+    const cx = cableStart.x + (targetX - cableStart.x) * frac + Math.sin(frac * Math.PI * 3) * 4 + Math.cos(frac * Math.PI * 1.5) * 2;
+    // Seabed height - transition from cableStart.y to formula value
+    const baseY = -24 + Math.sin(cx * 0.05 + cz * 0.03) * 0.6 + Math.cos(cx * 0.08) * 0.3;
+    // Smooth blend from starting height to seabed height over first 20% of cable
+    const blend = Math.min(1, frac * 5);
+    const cy = cableStart.y * (1 - blend) + baseY * blend;
     cablePoints.push(new THREE.Vector3(cx, cy, cz));
   }
-  // Come up onto the beach
-  cablePoints.push(new THREE.Vector3(40, -1, 35));
-  cablePoints.push(new THREE.Vector3(40, 0.5, 40));
+  // Continue cable up the beach - smooth transition from last seabed point
+  const lastSeabedPoint = cablePoints[cablePoints.length - 1];
+  // Cable gradually emerges from seabed to beach over ~60 units of distance
+  cablePoints.push(new THREE.Vector3(lastSeabedPoint.x - 1, -15, lastSeabedPoint.z + 15));   // Rising
+  cablePoints.push(new THREE.Vector3(lastSeabedPoint.x - 2, -8, lastSeabedPoint.z + 30));    // Climbing
+  cablePoints.push(new THREE.Vector3(lastSeabedPoint.x - 2, -2, lastSeabedPoint.z + 45));    // Near surface
+  cablePoints.push(new THREE.Vector3(lastSeabedPoint.x - 2, 1, lastSeabedPoint.z + 60));     // On beach
+  // Build cable with large diameter segments
   for (let i = 0; i < cablePoints.length - 1; i++) {
     const start = cablePoints[i], end = cablePoints[i + 1];
     const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
     const dir = new THREE.Vector3().subVectors(end, start);
     const len = dir.length();
-    const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, len, 8), cableMat);
+    // Large diameter cable: 2m diameter industrial power cable for visibility
+    const seg = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, len, 16), cableMat);
     seg.position.copy(mid);
     seg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
     ug.add(seg);
+  }
+  
+  // Cable protection/concrete mattresses along sections of the cable
+  // Disable fog on mattresses too so they remain visible
+  const mattressMat = new THREE.MeshLambertMaterial({ color: 0x666666, flatShading: true, fog: false });
+  mattressMat.side = THREE.FrontSide;
+  for (let i = 10; i < cableSegs - 5; i += 8) {
+    const frac = i / cableSegs;
+    const cz = startZ + frac * totalDistance;
+    const cx = 60 - frac * 22 + Math.sin(frac * Math.PI * 3) * 4 + Math.cos(frac * Math.PI * 1.5) * 2;
+    const cy = -24 + Math.sin(cx * 0.05 + cz * 0.03) * 0.6 + Math.cos(cx * 0.08) * 0.3;
+    // Concrete mattress section
+    const mattress = new THREE.Mesh(new THREE.BoxGeometry(3, 0.3, 1.5), mattressMat);
+    mattress.position.set(cx, cy + 0.4, cz);
+    // Orient along cable direction
+    const nextFrac = (i + 1) / cableSegs;
+    const nextCz = startZ + nextFrac * totalDistance;
+    const nextCx = 60 - nextFrac * 22 + Math.sin(nextFrac * Math.PI * 3) * 4 + Math.cos(nextFrac * Math.PI * 1.5) * 2;
+    mattress.lookAt(nextCx, cy, nextCz);
+    ug.add(mattress);
   }
 
   // Scattered seabed rocks
@@ -1370,7 +1417,8 @@ document.querySelector('a[href="#services"]').addEventListener('click', (e) => {
   contactOverlay.classList.remove('visible');
   if (cameraMode === 'team') { flyFromTeam(); pendingUnderwater = true; }
   else if (cameraMode === 'underwater') flyToOffshoreFromUnderwater();
-  else if (cameraMode !== 'offshore') flyToOffshore();
+  else if (cameraMode === 'offshore') flyToOnshore();
+  else if (cameraMode === 'onshore') flyToOffshore();
 });
 
 document.querySelector('a[href="#projects"]').addEventListener('click', (e) => {
@@ -1384,9 +1432,9 @@ document.querySelector('a[href="#projects"]').addEventListener('click', (e) => {
 document.querySelector('a[href="#team"]').addEventListener('click', (e) => {
   e.preventDefault();
   contactOverlay.classList.remove('visible');
-  if (cameraMode === 'underwater') flyToTeam();
+  if (cameraMode === 'underwater') { flyToOffshoreFromUnderwater(); pendingTeam = true; }
   else if (cameraMode === 'offshore') { flyToOnshore(); pendingTeam = true; }
-  else if (cameraMode !== 'team') flyToTeam();
+  else if (cameraMode === 'onshore') flyToTeam();
 });
 
 // Logo click to go back to onshore
@@ -1542,6 +1590,9 @@ function animate() {
       } else if (pendingUnderwater) {
         pendingUnderwater = false;
         flyToUnderwater();
+      } else if (pendingOnshore) {
+        pendingOnshore = false;
+        flyToOnshore();
       }
     }
 
@@ -1645,6 +1696,11 @@ function animate() {
       cameraMode = 'onshore';
       document.querySelector('.hero-content').classList.remove('hidden');
       history.pushState(null, null, '#');
+      if (pendingUnderwater) {
+        pendingUnderwater = false;
+        flyToOffshore();
+        pendingUnderwater = true;
+      }
     }
 
   } else {
