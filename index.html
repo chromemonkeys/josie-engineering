@@ -1229,81 +1229,114 @@ function createUnderwaterScene() {
     }
   }
 
-  // Jellyfish - floating with translucent bell and tentacles
+  // Jellyfish - umbrella shaped with long tentacles
   function createJellyfish(x, y, z, scale = 1, color = 0xff69b4) {
     const jellyfish = new THREE.Group();
     
-    // Bell - translucent dome
+    // Umbrella bell - flattened sphere, more transparent
     const bellMat = new THREE.MeshLambertMaterial({ 
       color: color, 
       transparent: true, 
-      opacity: 0.6,
-      flatShading: true 
+      opacity: 0.35,
+      flatShading: true,
+      side: THREE.DoubleSide
     });
     const bell = new THREE.Mesh(
-      new THREE.SphereGeometry(0.5, 8, 6),
+      new THREE.SphereGeometry(0.5, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.4),
       bellMat
     );
-    bell.scale.set(1, 0.7, 1);
+    bell.scale.set(1, 0.5, 1);
     jellyfish.add(bell);
     
-    // Inner bell (brighter center)
-    const innerBell = new THREE.Mesh(
-      new THREE.SphereGeometry(0.3, 6, 4),
-      new THREE.MeshLambertMaterial({ color: color, transparent: true, opacity: 0.3 })
+    // Inner glow
+    const innerMat = new THREE.MeshLambertMaterial({ 
+      color: color, 
+      transparent: true, 
+      opacity: 0.2,
+      flatShading: true 
+    });
+    const inner = new THREE.Mesh(
+      new THREE.SphereGeometry(0.25, 8, 6),
+      innerMat
     );
-    innerBell.scale.set(1, 0.5, 1);
-    innerBell.position.y = -0.1;
-    jellyfish.add(innerBell);
+    inner.scale.set(1, 0.3, 1);
+    inner.position.y = -0.05;
+    jellyfish.add(inner);
     
-    // Tentacles - multiple thin strands hanging down
+    // Long tentacles - 12 strands hanging down
     const tentacleMat = new THREE.MeshLambertMaterial({ 
       color: color, 
       transparent: true, 
-      opacity: 0.4 
+      opacity: 0.25,
+      flatShading: true
     });
     
-    for (let t = 0; t < 8; t++) {
+    for (let t = 0; t < 12; t++) {
+      const angle = (t / 12) * Math.PI * 2;
+      const radius = 0.1 + (t % 3) * 0.12;
+      
+      // Main tentacle
       const tentacle = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.02 * scale, 0.01 * scale, 1.2 * scale, 4),
+        new THREE.CylinderGeometry(0.015 * scale, 0.005 * scale, 2.5 * scale, 4),
         tentacleMat
       );
-      const angle = (t / 8) * Math.PI * 2;
       tentacle.position.set(
-        Math.cos(angle) * 0.25 * scale,
-        -0.8 * scale,
-        Math.sin(angle) * 0.25 * scale
+        Math.cos(angle) * radius * scale,
+        -1.5 * scale,
+        Math.sin(angle) * radius * scale
       );
-      tentacle.rotation.z = (Math.random() - 0.5) * 0.3;
-      tentacle.rotation.x = (Math.random() - 0.5) * 0.3;
+      tentacle.rotation.z = Math.sin(angle) * 0.15;
+      tentacle.rotation.x = Math.cos(angle) * 0.15;
       jellyfish.add(tentacle);
+      
+      // Add slight curve by using a second segment
+      const tentacleTip = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.008 * scale, 0.002 * scale, 1.5 * scale, 4),
+        tentacleMat
+      );
+      tentacleTip.position.set(
+        Math.cos(angle) * radius * scale,
+        -3.2 * scale,
+        Math.sin(angle) * radius * scale
+      );
+      tentacleTip.rotation.z = Math.sin(angle) * 0.25;
+      tentacleTip.rotation.x = Math.cos(angle) * 0.25;
+      jellyfish.add(tentacleTip);
     }
     
-    // Position in water column
+    // Position in water
     jellyfish.position.set(x, y, z);
     jellyfish.scale.set(scale, scale, scale);
     jellyfish.rotation.y = hash(x, z) * Math.PI * 2;
     
-    // Store for animation
+    // Animation data
     jellyfish.userData = { 
       baseY: y, 
       offset: hash(x, z) * Math.PI * 2,
-      speed: 0.5 + hash(x, y) * 0.5 
+      speed: 0.3 + hash(x, y) * 0.4
     };
     
     return jellyfish;
   }
   
-  // Lots of jellyfish floating in the water
+  // Lots of jellyfish floating around the monopile
   const jellyfishColors = [0xff69b4, 0x9370db, 0x00ced1, 0xffd700, 0xff6347];
-  for (let i = 0; i < 40; i++) {
-    const jx = (hash(i * 23, i * 41) - 0.5) * 60 + 55;
-    const jy = -5 - hash(i * 17, i * 29) * 18; // Between y=-5 and y=-23
-    const jz = oceanZ + 60 + (hash(i * 31, i * 53) - 0.5) * 60;
-    const scale = 0.4 + hash(i * 11, i * 37) * 0.5;
+  const jellyfishArray = [];
+  for (let i = 0; i < 25; i++) {
+    // Position around the monopile base (x=60, z=oceanZ+60)
+    const angle = (i / 25) * Math.PI * 2 + hash(i * 13, i) * 0.5;
+    const radius = 5 + hash(i * 29, i * 41) * 12;
+    const jx = 60 + Math.cos(angle) * radius;
+    const jz = oceanZ + 60 + Math.sin(angle) * radius;
+    const jy = -8 - hash(i * 17, i * 29) * 12; // Between y=-8 and y=-20
+    const scale = 0.5 + hash(i * 11, i * 37) * 0.4;
     const color = jellyfishColors[Math.floor(hash(i, i * 7) * jellyfishColors.length)];
-    ug.add(createJellyfish(jx, jy, jz, scale, color));
+    const jelly = createJellyfish(jx, jy, jz, scale, color);
+    jellyfishArray.push(jelly);
+    ug.add(jelly);
   }
+  // Store for animation
+  ug.userData.jellyfish = jellyfishArray;
 
   scene.add(ug);
   return ug;
@@ -1731,6 +1764,25 @@ function animate() {
     b.children[0].rotation.z = 0.4 + Math.sin(t * d.flapSpeed) * 0.3;
     b.children[1].rotation.z = -0.4 - Math.sin(t * d.flapSpeed) * 0.3;
   });
+  
+  // Jellyfish floating animation
+  if (underwaterScene.userData.jellyfish) {
+    underwaterScene.userData.jellyfish.forEach(jelly => {
+      const d = jelly.userData;
+      // Bob up and down
+      jelly.position.y = d.baseY + Math.sin(t * d.speed + d.offset) * 0.8;
+      // Gentle rotation
+      jelly.rotation.y += 0.002;
+      // Pulse the bell slightly
+      const pulse = 1 + Math.sin(t * 2 + d.offset) * 0.05;
+      jelly.scale.set(
+        jelly.scale.x * pulse / (jelly.scale.x < 0.01 ? 1 : jelly.userData.lastPulse || 1),
+        jelly.scale.y,
+        jelly.scale.z * pulse / (jelly.scale.z < 0.01 ? 1 : jelly.userData.lastPulse || 1)
+      );
+      d.lastPulse = pulse;
+    });
+  }
   
   // Particles
   const pp = particles.geometry.attributes.position.array;
