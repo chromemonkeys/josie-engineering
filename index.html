@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Josie Engineering — Sustainable Infrastructure Consultancy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { overflow: hidden; background: #1a1a2e; font-family: 'Segoe UI', sans-serif; height: 100vh; }
+  canvas { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+  
+  /* Navigation */
+  nav {
+    position: fixed; top: 0; left: 0; width: 100%; z-index: 100; padding: 20px 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(12, 15, 19, 0.45); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06); transition: all 0.4s;
+  }
+  nav.scrolled { background: rgba(12, 15, 19, 0.88); padding: 14px 48px; }
+  .nav-logo {
+    font-family: 'Georgia', serif; font-size: 1.35rem; font-weight: 300;
+    letter-spacing: 0.15em; color: #fff; text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo .mark { width: 8px; height: 8px; background: #3dd68c; border-radius: 50%; }
+  .nav-links { display: flex; gap: 36px; align-items: center; }
+  .nav-links a {
+    color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.8rem;
+    font-weight: 400; letter-spacing: 0.15em; transition: color 0.3s; text-transform: uppercase;
+  }
+  .nav-links a:hover { color: #fff; }
+  .nav-cta {
+    padding: 10px 24px; border: 1px solid #3dd68c; color: #3dd68c !important;
+    border-radius: 2px; transition: all 0.3s; font-size: 0.75rem !important;
+  }
+  .nav-cta:hover { background: #3dd68c; color: #0c0f13 !important; }
+  
+  /* Sections - fixed position, no scrolling needed */
+  section { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 1; pointer-events: none; }
+  #hero { }
+  #services { }
+  #projects { }
+  #team { }
+  
+  /* Hero content */
+  .hero-content {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 20; text-align: center; pointer-events: none;
+    transition: opacity 1.6s ease;
+  }
+  .hero-content.hidden { opacity: 0; }
+  .hero-content h1 {
+    font-family: 'Georgia', serif; font-size: 2.5rem; font-weight: 300;
+    letter-spacing: 0.3em; color: rgba(255,255,255,0.85);
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5); animation: fadeUp 2s ease-out 0.5s both;
+  }
+  .hero-content p {
+    font-size: 0.85rem; letter-spacing: 0.5em; text-transform: uppercase;
+    color: rgba(255,255,255,0.4); margin-top: 8px; animation: fadeUp 2s ease-out 1s both;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  
+  /* Services Slider */
+  .services-left {
+    position: fixed; top: 0; left: 0; z-index: 3; width: 45%; max-width: 520px;
+    padding: 80px 48px; height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; pointer-events: auto;
+    background: linear-gradient(to right, rgba(12,15,19,0.95) 0%, rgba(12,15,19,0.7) 60%, transparent 100%);
+    opacity: 0; transition: opacity 1.6s ease; pointer-events: none;
+  }
+  .services-left.visible { opacity: 1; pointer-events: auto; }
+  .services-header { margin-bottom: 32px; }
+  .section-label { font-size: 0.7rem; letter-spacing: 0.5em; text-transform: uppercase; color: #3dd68c; font-weight: 500; margin-bottom: 16px; }
+  .section-title { font-family: 'Georgia', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 300; line-height: 1.2; color: #fff; letter-spacing: 0.05em; }
+  
+  .services-slider { position: relative; }
+  .slider-container { position: relative; overflow: hidden; }
+  .slider-track { display: flex; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
+  .service-card {
+    flex: 0 0 100%; background: rgba(16,20,25,0.85); padding: 48px;
+    border: 1px solid rgba(37,43,52,0.6); border-radius: 4px; backdrop-filter: blur(16px);
+  }
+  .service-card::before { content: ''; display: block; width: 40px; height: 2px; background: #3dd68c; margin-bottom: 24px; }
+  .service-card h3 { font-family: 'Georgia', serif; font-size: 1.45rem; font-weight: 300; margin-bottom: 16px; color: #fff; letter-spacing: 0.05em; }
+  .service-card p { color: #8a919a; font-size: 1.0rem; line-height: 1.75; letter-spacing: 0.02em; }
+  
+  .slider-nav { display: flex; align-items: center; gap: 16px; margin-top: 28px; }
+  .slider-btn {
+    width: 48px; height: 48px; border: 1px solid rgba(37,43,52,0.6); background: rgba(16,20,25,0.8);
+    color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s; border-radius: 50%;
+  }
+  .slider-btn:hover { border-color: #3dd68c; background: #3dd68c; color: #0c0f13; }
+  .slider-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .slider-btn svg { width: 20px; height: 20px; }
+  .slider-dots { display: flex; gap: 8px; }
+  .slider-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.3s; }
+  .slider-dot:hover { background: rgba(255,255,255,0.4); }
+  .slider-dot.active { background: #3dd68c; }
+  .slider-counter { font-size: 0.8rem; color: #8a919a; letter-spacing: 0.1em; margin-left: auto; }
+
+  /* Projects Slider */
+  .projects-left {
+    position: fixed; top: 0; left: 0; z-index: 3; width: 45%; max-width: 520px;
+    padding: 80px 48px; height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; pointer-events: auto;
+    background: linear-gradient(to right, rgba(8,18,28,0.95) 0%, rgba(8,18,28,0.7) 60%, transparent 100%);
+    opacity: 0; transition: opacity 1.6s ease; pointer-events: none;
+  }
+  .projects-left.visible { opacity: 1; pointer-events: auto; }
+  .projects-header { margin-bottom: 32px; }
+
+  /* Team Panel */
+  .team-left {
+    position: fixed; top: 0; left: 0; z-index: 3; width: 45%; max-width: 520px;
+    padding: 80px 48px; height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; pointer-events: auto;
+    background: linear-gradient(to right, rgba(12,15,19,0.95) 0%, rgba(12,15,19,0.7) 60%, transparent 100%);
+    opacity: 0; transition: opacity 1.6s ease; pointer-events: none;
+  }
+  .team-left.visible { opacity: 1; pointer-events: auto; }
+  .team-header { margin-bottom: 32px; }
+  .team-card { flex: 0 0 100%; padding: 48px; }
+  .team-card .team-name { font-family: 'Georgia', serif; font-size: 1.45rem; font-weight: 300; margin-bottom: 6px; color: #fff; letter-spacing: 0.05em; }
+  .team-card .team-role { font-size: 0.8rem; letter-spacing: 0.3em; text-transform: uppercase; color: #3dd68c; margin-bottom: 16px; }
+  .team-card p { color: #8a919a; font-size: 1.0rem; line-height: 1.75; letter-spacing: 0.02em; }
+
+  /* Contact Overlay */
+  #contact-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.4s, visibility 0.4s; }
+  #contact-overlay.visible { opacity: 1; visibility: visible; }
+  .contact-overlay-bg { position: absolute; inset: 0; background: transparent; }
+  .contact-content { position: relative; z-index: 1; background: rgba(12,15,19,0.95); border: 1px solid rgba(61,214,140,0.3); padding: 64px 56px; border-radius: 4px; text-align: center; max-width: 480px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .contact-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 2rem; cursor: pointer; transition: color 0.3s; }
+  .contact-close:hover { color: #fff; }
+  .contact-content h2 { font-family: 'Georgia', serif; font-size: 2.2rem; font-weight: 300; margin-bottom: 48px; color: #fff; letter-spacing: 0.05em; }
+  .contact-links { display: flex; flex-direction: column; gap: 24px; }
+  .contact-item { display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.85); text-decoration: none; font-size: 1.1rem; transition: color 0.3s, transform 0.3s; padding: 12px 16px; border-radius: 4px; }
+  .contact-item:hover { color: #3dd68c; transform: translateX(8px); background: rgba(61,214,140,0.05); }
+  .contact-item svg { width: 24px; height: 24px; flex-shrink: 0; }
+
+  /* Scroll hint */
+  #scroll-hint { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; animation: fadeUp 1.2s ease-out 1.2s both; z-index: 20; pointer-events: auto; cursor: pointer; }
+  #scroll-hint span { font-size: 0.7rem; letter-spacing: 0.5em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+  #scroll-hint .line { width: 1px; height: 40px; background: rgba(255,255,255,0.2); position: relative; overflow: hidden; }
+  #scroll-hint .line::after { content: ''; position: absolute; top: -100%; left: 0; width: 1px; height: 100%; background: #3dd68c; animation: scrollLine 2s ease-in-out infinite; }
+  @keyframes scrollLine { 0% { top: -100%; } 50% { top: 100%; } 100% { top: 100%; } }
+  
+  /* Mobile */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .services-left { width: 100%; padding: 100px 24px 40px; height: auto; }
+    .projects-left { width: 100%; padding: 100px 24px 40px; height: auto; }
+    .team-left { width: 100%; padding: 100px 24px 40px; height: auto; }
+    .service-card { padding: 28px; }
+  }
+  
+  /* Contact overlay mobile */
+  .contact-content { padding: 48px 32px; }
+  .contact-content h2 { font-size: 1.8rem; }
+  .contact-item { font-size: 1rem; }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="#" class="nav-logo"><span class="mark"></span>Josie</a>
+  <div class="nav-links">
+    <a href="#services">Services</a>
+    <a href="#projects">Projects</a>
+    <a href="#team">Team</a>
+    <a href="#contact" class="nav-cta">Get in Touch</a>
+  </div>
+</nav>
+
+<!-- Contact Overlay -->
+<div id="contact-overlay">
+  <div class="contact-overlay-bg"></div>
+  <div class="contact-content">
+    <button class="contact-close" aria-label="Close">&times;</button>
+    <h2>Get in Touch</h2>
+    <div class="contact-links">
+      <a href="mailto:hello@josie-eng.com" class="contact-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>hello@josie-eng.com</span>
+      </a>
+      <a href="tel:+441315550234" class="contact-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>+44 (0) 131 555 0234</span>
+      </a>
+      <a href="https://linkedin.com" target="_blank" class="contact-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        <span>LinkedIn</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<section id="hero">
+  <div class="hero-content">
+    <h1>Josie Engineering</h1>
+    <p>Sustainable Infrastructure</p>
+  </div>
+</section>
+
+<section id="services">
+  <div class="services-left">
+    <div class="services-header">
+      <div class="section-label">What We Do</div>
+      <div class="section-title">Comprehensive engineering across the energy lifecycle</div>
+    </div>
+    
+    <div class="services-slider">
+      <div class="slider-container">
+        <div class="slider-track" id="slider-track">
+          <div class="service-card"><h3>Renewable Energy</h3><p>Wind, solar, and hybrid energy systems. Site assessment, energy yield analysis, detailed design, and grid integration.</p></div>
+          <div class="service-card"><h3>Structural Engineering</h3><p>Advanced structural analysis and design for towers, foundations, offshore structures, and industrial facilities.</p></div>
+          <div class="service-card"><h3>Civil Infrastructure</h3><p>Roads, drainage, earthworks, and site development. We optimise designs to minimise environmental impact.</p></div>
+          <div class="service-card"><h3>Environmental & Planning</h3><p>Environmental impact assessment, permitting support, stakeholder engagement, and regulatory compliance.</p></div>
+          <div class="service-card"><h3>Owner's Engineering</h3><p>Independent technical advisory throughout procurement, construction, and commissioning.</p></div>
+          <div class="service-card"><h3>Asset Performance</h3><p>Operational analysis, performance optimisation, life extension studies, and repowering assessments.</p></div>
+        </div>
+      </div>
+      
+      <div class="slider-nav">
+        <button class="slider-btn" id="prev-btn" aria-label="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="slider-dots" id="slider-dots"></div>
+        <button class="slider-btn" id="next-btn" aria-label="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="slider-counter"><span id="current-slide">1</span> / 6</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="projects-left">
+    <div class="projects-header">
+      <div class="section-label">Selected Work</div>
+      <div class="section-title">Projects that shape the landscape</div>
+    </div>
+
+    <div class="projects-slider">
+      <div class="slider-container">
+        <div class="slider-track" id="projects-slider-track">
+          <div class="service-card"><h3>Highland Ridge Wind Farm</h3><p>Full EPC owner's engineering for a 220MW onshore wind farm across complex terrain in the Scottish Highlands.</p></div>
+          <div class="service-card"><h3>North Sea Array Phase II</h3><p>Detailed foundation design and installation engineering for 80 monopile structures in challenging North Sea conditions.</p></div>
+          <div class="service-card"><h3>Al Dhafra Solar Complex</h3><p>Technical due diligence for one of the world's largest single-site solar PV projects at 2GW capacity.</p></div>
+          <div class="service-card"><h3>Patagonia Wind-Solar Hybrid</h3><p>Feasibility study for a 450MW wind-solar hybrid with integrated battery storage in southern Argentina.</p></div>
+        </div>
+      </div>
+
+      <div class="slider-nav">
+        <button class="slider-btn" id="projects-prev-btn" aria-label="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="slider-dots" id="projects-slider-dots"></div>
+        <button class="slider-btn" id="projects-next-btn" aria-label="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="slider-counter"><span id="projects-current-slide">1</span> / 4</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="team">
+  <div class="team-left">
+    <div class="team-header">
+      <div class="section-label">Leadership</div>
+      <div class="section-title">Built on deep expertise</div>
+    </div>
+
+    <div class="team-slider">
+      <div class="slider-container">
+        <div class="slider-track" id="team-slider-track">
+          <div class="team-card">
+            <div class="team-name">Sarah Chen</div>
+            <div class="team-role">Managing Director</div>
+            <p>20 years leading complex offshore wind and infrastructure projects across Europe, the Middle East, and Asia Pacific. Former head of engineering at Orsted.</p>
+          </div>
+          <div class="team-card">
+            <div class="team-name">James McAllister</div>
+            <div class="team-role">Technical Director</div>
+            <p>Structural and geotechnical specialist with deep expertise in monopile foundation design. Led the engineering on over 500 offshore turbine installations.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slider-nav">
+        <button class="slider-btn" id="team-prev-btn" aria-label="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="slider-dots" id="team-slider-dots"></div>
+        <button class="slider-btn" id="team-next-btn" aria-label="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="slider-counter"><span id="team-current-slide">1</span> / 2</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="scroll-hint"><span>Scroll</span><div class="line"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─── SCENE SETUP ───
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+document.body.appendChild(renderer.domElement);
+
+scene.fog = new THREE.FogExp2(0xb8c4cc, 0.006);
+renderer.setClearColor(0xb8c4cc);
+
+// ─── ENVIRONMENT TRANSITION BASELINES ───
+const abovewaterFogColor = new THREE.Color(0xb8c4cc);
+const abovewaterClearColor = new THREE.Color(0xb8c4cc);
+const underwaterFogColor = new THREE.Color(0x3a7a8a);
+const underwaterClearColor = new THREE.Color(0x2a6a7a);
+const abovewaterFogDensity = 0.008;
+const underwaterFogDensity = 0.015;
+
+// ─── DETERMINISTIC HASH ───
+function hash(x, z) {
+  let n = Math.sin(x * 127.1 + z * 311.7) * 43758.5453;
+  return n - Math.floor(n);
+}
+
+// ─── TERRAIN HEIGHT ───
+function terrainHeight(x, z) {
+  let y = Math.sin(x * 0.04) * 3 + Math.cos(z * 0.05) * 2.5;
+  y += Math.sin(x * 0.08 + z * 0.06) * 1.5;
+  y += Math.sin(x * 0.15) * Math.cos(z * 0.12) * 0.8;
+  y += Math.sin(x * 0.7 + z * 0.3) * 0.3;
+  const dist = Math.sqrt(x * x + z * z);
+  y -= Math.max(0, 3 - dist * 0.06);
+  return y + 3; // Raised to keep land above ocean surface (y=-2)
+}
+
+// ─── SKY ───
+const skyGeo = new THREE.SphereGeometry(900, 32, 32);
+const skyMat = new THREE.ShaderMaterial({
+  uniforms: {
+    topColor: { value: new THREE.Color(0x1a1a4e) },
+    midColor: { value: new THREE.Color(0xe8836b) },
+    bottomColor: { value: new THREE.Color(0xc8d4dc) },
+    sunColor: { value: new THREE.Color(0xffe4a0) },
+    sunPos: { value: new THREE.Vector3(0.3, 0.05, -1.0) },
+    offset: { value: 10 },
+    exponent: { value: 0.5 }
+  },
+  vertexShader: `
+    varying vec3 vWorldPosition;
+    void main() {
+      vec4 worldPos = modelMatrix * vec4(position, 1.0);
+      vWorldPosition = worldPos.xyz;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 topColor, midColor, bottomColor, sunColor, sunPos;
+    uniform float offset, exponent;
+    varying vec3 vWorldPosition;
+    void main() {
+      float h = normalize(vWorldPosition + offset).y;
+      float t = max(pow(max(h, 0.0), exponent), 0.0);
+      vec3 col;
+      if (t < 0.3) col = mix(bottomColor, midColor, t / 0.3);
+      else col = mix(midColor, topColor, (t - 0.3) / 0.7);
+      vec3 dir = normalize(vWorldPosition);
+      float sunDot = max(dot(dir, normalize(sunPos)), 0.0);
+      col += sunColor * pow(sunDot, 32.0) * 1.5;
+      col += sunColor * pow(sunDot, 4.0) * 0.3;
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+  side: THREE.BackSide
+});
+scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+// ─── LIGHTING ───
+const ambientLight = new THREE.AmbientLight(0x8899bb, 0.4);
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(0xffe0b2, 1.8);
+sunLight.position.set(30, 25, -50);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far = 150;
+sunLight.shadow.camera.left = -60;
+sunLight.shadow.camera.right = 60;
+sunLight.shadow.camera.top = 60;
+sunLight.shadow.camera.bottom = -60;
+sunLight.shadow.bias = -0.001;
+scene.add(sunLight);
+
+const fillBlue = new THREE.DirectionalLight(0x6688cc, 0.3);
+fillBlue.position.set(-20, 10, 30);
+scene.add(fillBlue);
+const fillOrange = new THREE.DirectionalLight(0xff8855, 0.5);
+fillOrange.position.set(0, 5, -40);
+scene.add(fillOrange);
+
+// ─── ENVIRONMENT TRANSITION ───
+function updateEnvironment(blend) {
+  // blend: 0 = above water, 1 = fully underwater
+  scene.fog.color.copy(abovewaterFogColor).lerp(underwaterFogColor, blend);
+  scene.fog.density = abovewaterFogDensity + (underwaterFogDensity - abovewaterFogDensity) * blend;
+  renderer.setClearColor(new THREE.Color().copy(abovewaterClearColor).lerp(underwaterClearColor, blend));
+  sunLight.intensity = 1.8 * (1 - blend * 0.4);
+  ambientLight.color.copy(new THREE.Color(0x8899bb)).lerp(new THREE.Color(0x5a9abb), blend);
+  ambientLight.intensity = 0.4 + blend * 0.5;
+  fillOrange.intensity = 0.5 * (1 - blend);
+  fillBlue.intensity = 0.3 + blend * 0.4;
+  fillBlue.color.copy(new THREE.Color(0x6688cc)).lerp(new THREE.Color(0x6aaabb), blend);
+  renderer.toneMappingExposure = 1.1 - blend * 0.1;
+  ocean.material.opacity = 0.9 - blend * 0.3;
+}
+
+// ─── TERRAIN ───
+function createTerrain() {
+  const geo = new THREE.PlaneGeometry(160, 160, 80, 80);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  const colors = [];
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i);
+    const y = terrainHeight(x, z);
+    pos.setY(i, y);
+    const nf = hash(x * 10, z * 10);
+    let col;
+    if (y > 3) col = new THREE.Color(0x8fb565).lerp(new THREE.Color(0x6ba358), nf);
+    else if (y > 0) col = new THREE.Color(0x6ba358).lerp(new THREE.Color(0x4a7c3f), nf);
+    else col = new THREE.Color(0x4a7c3f).lerp(new THREE.Color(0x2d5a27), nf);
+    col.lerp(new THREE.Color(0xd4a060), 0.08);
+    colors.push(col.r, col.g, col.b);
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+  const flatGeo = geo.toNonIndexed();
+  flatGeo.computeVertexNormals();
+  const mesh = new THREE.Mesh(flatGeo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
+
+// ─── OCEAN ───
+const oceanZ = -400;
+const oceanGeo = new THREE.PlaneGeometry(1200, 1000, 80, 80);
+oceanGeo.rotateX(-Math.PI / 2);
+const oPos = oceanGeo.attributes.position;
+const oceanColors = [];
+for (let i = 0; i < oPos.count; i++) {
+  const x = oPos.getX(i), z = oPos.getZ(i);
+  const n = hash(x * 0.1, z * 0.1);
+  let c = new THREE.Color(0x2a5a7a).lerp(new THREE.Color(0x1a4a6a), n);
+  c.lerp(new THREE.Color(0x6a9ab8), hash(x * 0.3, z * 0.5) * 0.15);
+  oceanColors.push(c.r, c.g, c.b);
+}
+oceanGeo.setAttribute('color', new THREE.Float32BufferAttribute(oceanColors, 3));
+const ocean = new THREE.Mesh(oceanGeo, new THREE.MeshPhongMaterial({
+  vertexColors: true, flatShading: true, shininess: 80, specular: 0x446688, transparent: true, opacity: 0.9, side: THREE.DoubleSide
+}));
+ocean.position.set(0, -2, oceanZ);
+ocean.receiveShadow = true;
+scene.add(ocean);
+
+// ─── WIND TURBINES ───
+function createWindTurbine(x, z, scale = 1, towerH = 14) {
+  const group = new THREE.Group();
+  const h = towerH * scale, s = scale;
+  const tower = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15 * s, 0.5 * s, h, 8),
+    new THREE.MeshLambertMaterial({ color: 0xeaeaea, flatShading: true })
+  );
+  tower.position.y = h / 2;
+  tower.castShadow = true;
+  group.add(tower);
+  const nacelle = new THREE.Mesh(
+    new THREE.BoxGeometry(0.45 * s, 0.35 * s, 1.4 * s),
+    new THREE.MeshLambertMaterial({ color: 0xf0f0f0, flatShading: true })
+  );
+  nacelle.position.set(0, h + 0.1 * s, 0.2 * s);
+  nacelle.castShadow = true;
+  group.add(nacelle);
+  const hub = new THREE.Mesh(
+    new THREE.ConeGeometry(0.22 * s, 0.7 * s, 6),
+    new THREE.MeshLambertMaterial({ color: 0xdddddd, flatShading: true })
+  );
+  hub.rotation.x = -Math.PI / 2;
+  hub.position.set(0, h + 0.1 * s, 0.95 * s);
+  hub.castShadow = true;
+  group.add(hub);
+  const rotorPivot = new THREE.Group();
+  rotorPivot.position.set(0, h + 0.1 * s, 1.0 * s);
+  const bladeLen = 7.0 * s;
+  const bladeMat = new THREE.MeshLambertMaterial({ color: 0xf5f5f5, flatShading: true });
+  for (let i = 0; i < 3; i++) {
+    const bladeGroup = new THREE.Group();
+    bladeGroup.rotation.z = (Math.PI * 2 / 3) * i;
+    const r = new THREE.Mesh(new THREE.BoxGeometry(0.35 * s, bladeLen * 0.35, 0.06 * s), bladeMat);
+    r.position.y = bladeLen * 0.18;
+    r.castShadow = true;
+    bladeGroup.add(r);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.22 * s, bladeLen * 0.35, 0.05 * s), bladeMat);
+    m.position.y = bladeLen * 0.52;
+    m.castShadow = true;
+    bladeGroup.add(m);
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.1 * s, bladeLen * 0.32, 0.03 * s), bladeMat);
+    tip.position.y = bladeLen * 0.84;
+    tip.castShadow = true;
+    bladeGroup.add(tip);
+    rotorPivot.add(bladeGroup);
+  }
+  group.add(rotorPivot);
+  group.rotorPivot = rotorPivot;
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.9 * s, 1.1 * s, 0.25 * s, 6),
+    new THREE.MeshLambertMaterial({ color: 0x999999, flatShading: true })
+  );
+  base.position.y = 0.12 * s;
+  base.castShadow = true;
+  group.add(base);
+  const ty = terrainHeight(x, z);
+  group.position.set(x, Math.max(ty, -1), z);
+  scene.add(group);
+  return group;
+}
+
+// ─── SHIP (ON RIGHT SIDE) ───
+function createShip() {
+  const ship = new THREE.Group();
+  const whiteMat = new THREE.MeshLambertMaterial({ color: 0xf0f0f0, flatShading: true });
+  const redMat = new THREE.MeshLambertMaterial({ color: 0xcc3333, flatShading: true });
+  const darkMat = new THREE.MeshLambertMaterial({ color: 0x333333, flatShading: true });
+  const windowMat = new THREE.MeshLambertMaterial({ color: 0x4488aa, flatShading: true });
+  const orangeMat = new THREE.MeshLambertMaterial({ color: 0xff6600, flatShading: true });
+  const deckGrey = new THREE.MeshLambertMaterial({ color: 0x666666, flatShading: true });
+  const railMat = new THREE.MeshLambertMaterial({ color: 0xcccccc, flatShading: true });
+  const yellowMat = new THREE.MeshLambertMaterial({ color: 0xddcc00, flatShading: true });
+
+  // Hull with bow taper
+  const hullGeo = new THREE.BoxGeometry(4.5, 2.2, 14);
+  const hullPos = hullGeo.attributes.position;
+  for (let i = 0; i < hullPos.count; i++) {
+    const x = hullPos.getX(i), y = hullPos.getY(i), z = hullPos.getZ(i);
+    if (z > 4) {
+      const taper = 1 - (z - 4) / 3;
+      hullPos.setX(i, x * Math.max(0.15, taper));
+    }
+    if (z < -5) {
+      const taper = 1 - Math.abs(z + 5) / 2;
+      hullPos.setX(i, x * Math.max(0.7, taper));
+    }
+    if (y < 0) hullPos.setX(i, hullPos.getX(i) * 0.65);
+  }
+  hullGeo.computeVertexNormals();
+  const hull = new THREE.Mesh(hullGeo, whiteMat);
+  hull.position.y = 0.5;
+  hull.castShadow = true;
+  ship.add(hull);
+
+  const hullBottom = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.8, 13.5), redMat);
+  hullBottom.position.y = -0.5;
+  ship.add(hullBottom);
+
+  // Waterline stripe
+  const waterline = new THREE.Mesh(new THREE.BoxGeometry(4.55, 0.12, 13.8), new THREE.MeshLambertMaterial({ color: 0x1a1a2e, flatShading: true }));
+  waterline.position.y = 0.05;
+  ship.add(waterline);
+
+  // Main deck
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.2, 13), deckGrey);
+  deck.position.y = 1.7;
+  ship.add(deck);
+
+  // Deck railings — port and starboard
+  for (let side of [-1, 1]) {
+    for (let zi = -5; zi <= 6; zi += 1.5) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.5, 0.04), railMat);
+      post.position.set(side * 2.1, 2.05, zi);
+      ship.add(post);
+    }
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 11.5), railMat);
+    rail.position.set(side * 2.1, 2.3, 0);
+    ship.add(rail);
+  }
+
+  // Bridge — three tiers
+  const bridgeBase = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.2, 3.5), whiteMat);
+  bridgeBase.position.set(0, 2.5, -3);
+  ship.add(bridgeBase);
+
+  const bridgeMid = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1, 2.8), whiteMat);
+  bridgeMid.position.set(0, 3.6, -3);
+  ship.add(bridgeMid);
+
+  const bridgeTop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.8, 2.4), new THREE.MeshLambertMaterial({ color: 0xdddddd, flatShading: true }));
+  bridgeTop.position.set(0, 4.5, -3);
+  ship.add(bridgeTop);
+
+  // Bridge wing platforms
+  for (let side of [-1, 1]) {
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 1.2), deckGrey);
+    wing.position.set(side * 1.9, 3.55, -3);
+    ship.add(wing);
+  }
+
+  // Bridge windows — front row (5 windows)
+  for (let i = -2; i <= 2; i++) {
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.5, 0.05), windowMat);
+    win.position.set(i * 0.55, 3.8, -1.6);
+    ship.add(win);
+  }
+  // Bridge side windows
+  for (let side of [-1, 1]) {
+    for (let j = 0; j < 2; j++) {
+      const win = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.4), windowMat);
+      win.position.set(side * 1.41, 3.8, -3 + j * 1.2);
+      ship.add(win);
+    }
+  }
+
+  // Mast and antenna
+  const mastBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 1.5, 6), darkMat);
+  mastBase.position.set(0, 5.2, -3);
+  ship.add(mastBase);
+
+  const mastTop = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 2, 6), darkMat);
+  mastTop.position.set(0, 6.8, -3);
+  ship.add(mastTop);
+
+  // Antenna whip
+  const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 1.5, 4), darkMat);
+  antenna.position.set(0, 8.5, -3);
+  ship.add(antenna);
+
+  // Radar
+  const radar = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 6), whiteMat);
+  radar.position.set(0.5, 7.8, -3);
+  ship.add(radar);
+
+  // Navigation lights
+  const navLightRed = new THREE.Mesh(new THREE.SphereGeometry(0.06, 4, 4), redMat);
+  navLightRed.position.set(-1.6, 2.6, -3);
+  ship.add(navLightRed);
+  const navLightGreen = new THREE.Mesh(new THREE.SphereGeometry(0.06, 4, 4), new THREE.MeshLambertMaterial({ color: 0x00cc44 }));
+  navLightGreen.position.set(1.6, 2.6, -3);
+  ship.add(navLightGreen);
+
+  // Funnel / exhaust stack
+  const funnel = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 1.2, 6), whiteMat);
+  funnel.position.set(0, 2.8, -5.5);
+  ship.add(funnel);
+  const funnelTop = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.3, 0.15, 6), darkMat);
+  funnelTop.position.set(0, 3.45, -5.5);
+  ship.add(funnelTop);
+
+  // Crane
+  const craneBase = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 1), darkMat);
+  craneBase.position.set(0, 2, 2);
+  ship.add(craneBase);
+
+  const cranePedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 0.6, 6), yellowMat);
+  cranePedestal.position.set(0, 2.3, 2);
+  ship.add(cranePedestal);
+
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3, 0.12), orangeMat);
+  legL.position.set(-0.5, 3.4, 2.3);
+  legL.rotation.x = -0.25;
+  ship.add(legL);
+
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3, 0.12), orangeMat);
+  legR.position.set(0.5, 3.4, 2.3);
+  legR.rotation.x = -0.25;
+  ship.add(legR);
+
+  const boom = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 5), orangeMat);
+  boom.position.set(0, 4.8, 4.5);
+  boom.rotation.x = 0.15;
+  ship.add(boom);
+
+  // Helipad
+  const heliPad = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.1, 12), darkMat);
+  heliPad.position.set(0, 2.1, 5.5);
+  ship.add(heliPad);
+
+  const h1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.02, 0.15), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+  h1.position.set(0, 2.16, 5.5);
+  ship.add(h1);
+  const h2 = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.8), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+  h2.position.set(0, 2.16, 5.5);
+  ship.add(h2);
+  // Helipad circle outline
+  const heliRing = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.03, 4, 16), yellowMat);
+  heliRing.rotation.x = -Math.PI / 2;
+  heliRing.position.set(0, 2.17, 5.5);
+  ship.add(heliRing);
+
+  // Lifeboats
+  for (let side of [-1, 1]) {
+    const lifeboat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 1.5), orangeMat);
+    lifeboat.position.set(side * 2.3, 2.3, -1);
+    ship.add(lifeboat);
+    // Davit arm
+    const davit = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.6, 0.04), darkMat);
+    davit.position.set(side * 2.15, 2.6, -1);
+    ship.add(davit);
+  }
+
+  // Deck equipment — winches and containers
+  const winch1 = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.4, 6), deckGrey);
+  winch1.rotation.z = Math.PI / 2;
+  winch1.position.set(1.2, 2.0, 0);
+  ship.add(winch1);
+  const winch2 = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.4, 6), deckGrey);
+  winch2.rotation.z = Math.PI / 2;
+  winch2.position.set(-1.2, 2.0, 0);
+  ship.add(winch2);
+
+  // Small containers on deck
+  const contMat = new THREE.MeshLambertMaterial({ color: 0x2266aa, flatShading: true });
+  const cont1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 1.8), contMat);
+  cont1.position.set(-1.2, 2.1, 1);
+  ship.add(cont1);
+  const cont2 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 1.0), new THREE.MeshLambertMaterial({ color: 0xaa4422, flatShading: true }));
+  cont2.position.set(1.2, 2.1, 1.2);
+  ship.add(cont2);
+
+  // A-frame at stern
+  const aFrameL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, 0.1), yellowMat);
+  aFrameL.position.set(-1.0, 3.2, -6.5);
+  aFrameL.rotation.x = 0.15;
+  ship.add(aFrameL);
+  const aFrameR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, 0.1), yellowMat);
+  aFrameR.position.set(1.0, 3.2, -6.5);
+  aFrameR.rotation.x = 0.15;
+  ship.add(aFrameR);
+  const aFrameTop = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 0.12), yellowMat);
+  aFrameTop.position.set(0, 4.6, -6.7);
+  ship.add(aFrameTop);
+
+  ship.scale.set(0.8, 0.8, 0.8);
+  return ship;
+}
+
+// ─── TREES ───
+function createTree(x, z, type) {
+  const ty = terrainHeight(x, z);
+  if (ty < -1.5) return null;
+  const group = new THREE.Group();
+  if (type === 'pine') {
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.1, 0.15, 1.5, 5),
+      new THREE.MeshLambertMaterial({ color: 0x6b4226, flatShading: true })
+    );
+    trunk.position.y = 0.75;
+    trunk.castShadow = true;
+    group.add(trunk);
+    [[0.9, 1.5, 0x2d6b30], [0.65, 2.5, 0x3a8c3f], [0.4, 3.3, 0x4da34f]].forEach(([r, h, c]) => {
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(r, 1.2, 6),
+        new THREE.MeshLambertMaterial({ color: c, flatShading: true })
+      );
+      cone.position.y = h;
+      cone.castShadow = true;
+      group.add(cone);
+    });
+  } else {
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.12, 1.2, 5),
+      new THREE.MeshLambertMaterial({ color: 0x7a5230, flatShading: true })
+    );
+    trunk.position.y = 0.6;
+    trunk.castShadow = true;
+    group.add(trunk);
+    const leaves = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.9, 0),
+      new THREE.MeshLambertMaterial({ color: new THREE.Color().setHSL(0.28 + hash(x, z) * 0.08, 0.55, 0.38), flatShading: true })
+    );
+    leaves.position.y = 1.8;
+    leaves.scale.set(1, 1.2, 1);
+    leaves.castShadow = true;
+    group.add(leaves);
+  }
+  const sc = 0.6 + hash(x * 3, z * 7) * 0.8;
+  group.scale.set(sc, sc, sc);
+  group.rotation.y = hash(x, z * 5) * Math.PI * 2;
+  group.position.set(x, ty, z);
+  scene.add(group);
+  return group;
+}
+
+// ─── ROCKS ───
+function createRock(x, z) {
+  const ty = terrainHeight(x, z);
+  if (ty < -2) return null;
+  const rock = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(0.3 + hash(x, z) * 0.6, 0),
+    new THREE.MeshLambertMaterial({ color: new THREE.Color().setHSL(0.08, 0.1, 0.35 + hash(x * 2, z * 3) * 0.2), flatShading: true })
+  );
+  rock.position.set(x, ty - 0.1, z);
+  rock.rotation.set(hash(x, z), hash(z, x), hash(x + z, z - x));
+  rock.scale.set(1, 0.5 + hash(x * 5, z) * 0.3, 1);
+  rock.castShadow = true;
+  scene.add(rock);
+  return rock;
+}
+
+// ─── CLOUDS ───
+const clouds = [];
+function createCloud(x, y, z, color = 0xfff5e6) {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: color, flatShading: true, transparent: true, opacity: 0.85 });
+  const n = 4 + Math.floor(hash(x, z) * 4);
+  for (let i = 0; i < n; i++) {
+    const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(1 + hash(i, x) * 1.5, 1), mat);
+    puff.position.set((hash(i * 3, z) - 0.5) * 4, (hash(i, x * 2) - 0.5) * 0.8, (hash(x, i * 5) - 0.5) * 2);
+    puff.scale.y = 0.5 + hash(i * 7, z) * 0.3;
+    group.add(puff);
+  }
+  group.position.set(x, y, z);
+  const s = 0.8 + hash(x, z) * 1.2;
+  group.scale.set(s, s * 0.5, s);
+  scene.add(group);
+  clouds.push(group);
+}
+
+// ─── BIRDS ───
+const birds = [];
+function createBird(x, y, z) {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: 0x2c2c2c, flatShading: true });
+  const wL = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 0.15), mat);
+  wL.position.x = -0.3; wL.rotation.z = 0.3; group.add(wL);
+  const wR = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 0.15), mat);
+  wR.position.x = 0.3; wR.rotation.z = -0.3; group.add(wR);
+  group.position.set(x, y, z);
+  group.userData = { baseY: y, speed: 0.3 + hash(x, z) * 0.5, angle: hash(x, z) * Math.PI * 2, radius: 10 + hash(z, x) * 20, flapSpeed: 3 + hash(x * 2, z) * 3 };
+  scene.add(group);
+  birds.push(group);
+}
+
+// ─── SEAGULLS ───
+const seagulls = [];
+function createSeagull(x, y, z) {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: 0xeeeedd, flatShading: true });
+  const wL = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.02, 0.15), mat);
+  wL.position.set(-0.35, 0, 0); wL.rotation.z = 0.3; group.add(wL);
+  const wR = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.02, 0.15), mat);
+  wR.position.set(0.35, 0, 0); wR.rotation.z = -0.3; group.add(wR);
+  group.position.set(x, y, z);
+  group.userData = { baseY: y, speed: 0.4 + hash(x, z) * 0.6, angle: hash(x, z) * Math.PI * 2, radius: 8 + hash(z, x) * 15, flapSpeed: 4 + hash(x * 2, z) * 4 };
+  scene.add(group);
+  seagulls.push(group);
+}
+
+// ─── PARTICLES ───
+function createParticles() {
+  const count = 200;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count * 3; i += 3) {
+    pos[i] = (hash(i, i + 1) - 0.5) * 100;
+    pos[i + 1] = hash(i + 2, i) * 20 + 2;
+    pos[i + 2] = (hash(i + 3, i + 4) - 0.5) * 100;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffeebb, size: 0.08, transparent: true, opacity: 0.6, sizeAttenuation: true }));
+  scene.add(pts);
+  return pts;
+}
+
+// ─── BUILD SCENE ───
+createTerrain();
+
+const turbines = [];
+const turbinePos = [
+  { x: -5, z: -18, s: 1.0, h: 14 },
+  { x: 15, z: -10, s: 0.9, h: 13 },
+  { x: -20, z: 3, s: 0.85, h: 12 },
+  { x: 8, z: 14, s: 1.0, h: 14 },
+  { x: -32, z: -22, s: 0.75, h: 11 },
+  { x: 28, z: -20, s: 0.9, h: 13 },
+  { x: -12, z: 28, s: 0.7, h: 10 },
+  { x: 22, z: 8, s: 0.85, h: 12 },
+];
+turbinePos.forEach(p => turbines.push(createWindTurbine(p.x, p.z, p.s, p.h)));
+
+// Ship positioned on the RIGHT side of the ocean
+const ship = createShip();
+ship.position.set(40, 0, oceanZ + 80); // Right side (x = 40), in the water, further from edge
+scene.add(ship);
+
+// Offshore wind turbine next to the boat - foundation goes deep into water
+function createOffshoreTurbine(x, z) {
+  const group = new THREE.Group();
+  const h = 18; // Taller for offshore
+  const s = 1.2; // Slightly larger
+  
+  // Above-water tower
+  const tower = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15 * s, 0.5 * s, h, 8),
+    new THREE.MeshLambertMaterial({ color: 0xeaeaea, flatShading: true })
+  );
+  tower.position.y = h / 2;
+  tower.castShadow = true;
+  group.add(tower);
+  
+  // Transition piece (yellow, just above water)
+  const transition = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.6 * s, 0.5 * s, 2, 8),
+    new THREE.MeshLambertMaterial({ color: 0xffaa00, flatShading: true })
+  );
+  transition.position.y = 0.5;
+  group.add(transition);
+  
+  // Underwater foundation (goes deep)
+  const foundation = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5 * s, 1.2 * s, 15, 8),
+    new THREE.MeshLambertMaterial({ color: 0x888899, flatShading: true })
+  );
+  foundation.position.y = -7.5;
+  group.add(foundation);
+  
+  // Nacelle
+  const nacelle = new THREE.Mesh(
+    new THREE.BoxGeometry(0.45 * s, 0.35 * s, 1.4 * s),
+    new THREE.MeshLambertMaterial({ color: 0xf0f0f0, flatShading: true })
+  );
+  nacelle.position.set(0, h + 0.1 * s, 0.2 * s);
+  nacelle.castShadow = true;
+  group.add(nacelle);
+  
+  // Hub
+  const hub = new THREE.Mesh(
+    new THREE.ConeGeometry(0.22 * s, 0.7 * s, 6),
+    new THREE.MeshLambertMaterial({ color: 0xdddddd, flatShading: true })
+  );
+  hub.rotation.x = -Math.PI / 2;
+  hub.position.set(0, h + 0.1 * s, 0.95 * s);
+  group.add(hub);
+  
+  // Rotor with blades
+  const rotorPivot = new THREE.Group();
+  rotorPivot.position.set(0, h + 0.1 * s, 1.0 * s);
+  const bladeLen = 7.0 * s;
+  const bladeMat = new THREE.MeshLambertMaterial({ color: 0xf5f5f5, flatShading: true });
+  for (let i = 0; i < 3; i++) {
+    const bladeGroup = new THREE.Group();
+    bladeGroup.rotation.z = (Math.PI * 2 / 3) * i;
+    const r = new THREE.Mesh(new THREE.BoxGeometry(0.35 * s, bladeLen * 0.35, 0.06 * s), bladeMat);
+    r.position.y = bladeLen * 0.18;
+    bladeGroup.add(r);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.22 * s, bladeLen * 0.35, 0.05 * s), bladeMat);
+    m.position.y = bladeLen * 0.52;
+    bladeGroup.add(m);
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.1 * s, bladeLen * 0.32, 0.03 * s), bladeMat);
+    tip.position.y = bladeLen * 0.84;
+    bladeGroup.add(tip);
+    rotorPivot.add(bladeGroup);
+  }
+  group.add(rotorPivot);
+  group.rotorPivot = rotorPivot;
+  
+  // Position in ocean
+  group.position.set(x, -1.5, z); // Slightly submerged base
+  scene.add(group);
+  return group;
+}
+
+const offshoreTurbine = createOffshoreTurbine(60, oceanZ + 60); // Next to boat
+
+// Track offshore turbine for animation
+turbines.push(offshoreTurbine);
+
+// ─── UNDERWATER SCENE ───
+function createUnderwaterScene() {
+  const ug = new THREE.Group();
+
+  // Seabed terrain — large enough to fill camera view
+  const sbGeo = new THREE.PlaneGeometry(300, 300, 60, 60);
+  sbGeo.rotateX(-Math.PI / 2);
+  const sbPos = sbGeo.attributes.position;
+  const sbColors = [];
+  for (let i = 0; i < sbPos.count; i++) {
+    const x = sbPos.getX(i), z = sbPos.getZ(i);
+    const y = -25 + Math.sin(x * 0.05) * 1.5 + Math.cos(z * 0.04) * 1.0
+              + Math.sin(x * 0.12 + z * 0.08) * 0.5 + Math.sin(x * 0.2 + z * 0.15) * 0.3;
+    sbPos.setY(i, y);
+    const n = hash(x * 5, z * 5);
+    let col = new THREE.Color(0x6a6050).lerp(new THREE.Color(0x4a4a38), n);
+    col.lerp(new THREE.Color(0x5a6a58), hash(x * 2, z * 3) * 0.3);
+    sbColors.push(col.r, col.g, col.b);
+  }
+  sbGeo.setAttribute('color', new THREE.Float32BufferAttribute(sbColors, 3));
+  sbGeo.computeVertexNormals();
+  const sbFlat = sbGeo.toNonIndexed();
+  sbFlat.computeVertexNormals();
+  const seabed = new THREE.Mesh(sbFlat, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
+  seabed.position.set(40, 0, oceanZ + 60);
+  ug.add(seabed);
+
+  // Monopile — single bold cylinder from seabed to above surface
+  const pileMat = new THREE.MeshLambertMaterial({ color: 0x889999, flatShading: true });
+  const monopile = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.5, 22, 10), pileMat);
+  monopile.position.set(60, -14, oceanZ + 60);
+  ug.add(monopile);
+
+  // Rock armour ring around monopile base
+  const rockRingMat = new THREE.MeshLambertMaterial({ color: 0x667766, flatShading: true });
+  for (let i = 0; i < 16; i++) {
+    const angle = (i / 16) * Math.PI * 2;
+    const radius = 3.5 + hash(i * 7, i * 3) * 1.0;
+    const rock = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(0.8 + hash(i * 11, i * 5) * 0.7, 0),
+      rockRingMat
+    );
+    rock.position.set(
+      60 + Math.cos(angle) * radius,
+      -24.5 + hash(i * 3, i) * 0.4,
+      oceanZ + 60 + Math.sin(angle) * radius
+    );
+    rock.rotation.set(hash(i, i * 2) * 2, hash(i * 3, i) * 2, 0);
+    rock.scale.set(1, 0.5 + hash(i * 5, i) * 0.3, 1);
+    ug.add(rock);
+  }
+
+  // Subsea cable — thick bright yellow cable from monopile to shore
+  const cableMat = new THREE.MeshLambertMaterial({ color: 0xffcc00, flatShading: true });
+  const cablePoints = [];
+  // Vertical drop from monopile base down to seabed
+  cablePoints.push(new THREE.Vector3(60, -20, oceanZ + 60));
+  cablePoints.push(new THREE.Vector3(60, -22, oceanZ + 60));
+  cablePoints.push(new THREE.Vector3(60, -24, oceanZ + 60));
+  // Run along seabed all the way to shore (z ≈ 30)
+  const cableSegs = 60;
+  const shoreZ = 30;
+  const startZ = oceanZ + 60;
+  const totalDistance = shoreZ - startZ;
+  for (let i = 0; i <= cableSegs; i++) {
+    const frac = i / cableSegs;
+    const cz = startZ + frac * totalDistance;
+    // Curve toward shore, slightly meandering
+    const cx = 60 - frac * 20 + Math.sin(frac * Math.PI * 2) * 3;
+    // Seabed height with slight variation
+    const cy = -24 + Math.sin(cx * 0.05 + cz * 0.03) * 0.5;
+    cablePoints.push(new THREE.Vector3(cx, cy, cz));
+  }
+  // Come up onto the beach
+  cablePoints.push(new THREE.Vector3(40, -1, 35));
+  cablePoints.push(new THREE.Vector3(40, 0.5, 40));
+  for (let i = 0; i < cablePoints.length - 1; i++) {
+    const start = cablePoints[i], end = cablePoints[i + 1];
+    const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    const dir = new THREE.Vector3().subVectors(end, start);
+    const len = dir.length();
+    const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, len, 8), cableMat);
+    seg.position.copy(mid);
+    seg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+    ug.add(seg);
+  }
+
+  // Scattered seabed rocks
+  const seaRockMat = new THREE.MeshLambertMaterial({ color: 0x556050, flatShading: true });
+  for (let i = 0; i < 40; i++) {
+    const rx = (hash(i * 17, i * 23) - 0.5) * 100 + 40;
+    const rz = oceanZ + 60 + (hash(i * 29, i * 31) - 0.5) * 100;
+    const size = 0.3 + hash(i * 41, i * 43) * 0.8;
+    const rock = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(size, 0),
+      new THREE.MeshLambertMaterial({
+        color: new THREE.Color().setHSL(0.25 + hash(i, i * 7) * 0.1, 0.15, 0.3 + hash(i * 3, i) * 0.15),
+        flatShading: true
+      })
+    );
+    rock.position.set(rx, -24.3 + hash(i * 5, i * 9) * 0.3, rz);
+    rock.rotation.set(hash(i * 2, i) * 3, hash(i, i * 4) * 3, hash(i * 6, i * 8));
+    rock.scale.set(1, 0.4 + hash(i * 13, i) * 0.4, 1);
+    ug.add(rock);
+  }
+
+  // Seaweed clusters
+  const seaweedColors = [0x2a6030, 0x1d5428, 0x387040, 0x2b5a2e];
+  for (let i = 0; i < 35; i++) {
+    const sx = (hash(i * 53, i * 59) - 0.5) * 90 + 40;
+    const sz = oceanZ + 60 + (hash(i * 61, i * 67) - 0.5) * 90;
+    const blades = 2 + Math.floor(hash(i * 71, i) * 4);
+    for (let b = 0; b < blades; b++) {
+      const h = 1.5 + hash(i * 37 + b, i * 43) * 2.5;
+      const w = 0.15 + hash(i + b * 7, i * 3) * 0.15;
+      const blade = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, 0.04),
+        new THREE.MeshLambertMaterial({
+          color: seaweedColors[Math.floor(hash(i * 11 + b, i) * seaweedColors.length)],
+          flatShading: true
+        })
+      );
+      blade.position.set(
+        sx + (hash(b * 3, i) - 0.5) * 0.6,
+        -24.0 + h * 0.5,
+        sz + (hash(i, b * 5) - 0.5) * 0.6
+      );
+      // Slight lean for natural look
+      blade.rotation.z = (hash(i + b, b) - 0.5) * 0.4;
+      blade.rotation.y = hash(i * b, i + b) * Math.PI;
+      ug.add(blade);
+    }
+  }
+
+  scene.add(ug);
+  return ug;
+}
+const underwaterScene = createUnderwaterScene();
+
+// Trees
+for (let i = 0; i < 130; i++) {
+  const x = (hash(i * 7, i * 13) - 0.5) * 120;
+  const z = (hash(i * 11, i * 3) - 0.5) * 120;
+  if (!turbinePos.some(p => Math.hypot(p.x - x, p.z - z) < 6))
+    createTree(x, z, hash(i, i * 2) > 0.4 ? 'pine' : 'round');
+}
+
+// Rocks
+for (let i = 0; i < 70; i++) {
+  createRock((hash(i * 19, i * 23) - 0.5) * 100, (hash(i * 29, i * 31) - 0.5) * 100);
+}
+
+// ─── TEAM CHARACTERS ───
+function createPerson(x, z, shirtColor, pantsColor) {
+  const group = new THREE.Group();
+  const ty = terrainHeight(x, z);
+  const skinMat = new THREE.MeshLambertMaterial({ color: 0xe8b89d, flatShading: true });
+  const shirtMat = new THREE.MeshLambertMaterial({ color: shirtColor, flatShading: true });
+  const pantsMat = new THREE.MeshLambertMaterial({ color: pantsColor, flatShading: true });
+  const shoeMat = new THREE.MeshLambertMaterial({ color: 0x333333, flatShading: true });
+  const hairMat = new THREE.MeshLambertMaterial({ color: 0x2a1a0a, flatShading: true });
+
+  // Legs
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.8, 0.22), pantsMat);
+  legL.position.set(-0.12, 0.4, 0);
+  group.add(legL);
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.8, 0.22), pantsMat);
+  legR.position.set(0.12, 0.4, 0);
+  group.add(legR);
+
+  // Shoes
+  const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.1, 0.3), shoeMat);
+  shoeL.position.set(-0.12, 0.05, 0.03);
+  group.add(shoeL);
+  const shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.1, 0.3), shoeMat);
+  shoeR.position.set(0.12, 0.05, 0.03);
+  group.add(shoeR);
+
+  // Torso
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.3), shirtMat);
+  torso.position.y = 1.15;
+  group.add(torso);
+
+  // Arms
+  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.65, 0.15), shirtMat);
+  armL.position.set(-0.33, 1.05, 0);
+  armL.rotation.z = 0.1;
+  group.add(armL);
+  const armR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.65, 0.15), shirtMat);
+  armR.position.set(0.33, 1.05, 0);
+  armR.rotation.z = -0.1;
+  group.add(armR);
+
+  // Hands
+  const handL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), skinMat);
+  handL.position.set(-0.36, 0.68, 0);
+  group.add(handL);
+  const handR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), skinMat);
+  handR.position.set(0.36, 0.68, 0);
+  group.add(handR);
+
+  // Head
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.35, 0.3), skinMat);
+  head.position.y = 1.7;
+  group.add(head);
+
+  // Hair
+  const hair = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.15, 0.32), hairMat);
+  hair.position.y = 1.92;
+  group.add(hair);
+
+  group.children.forEach(c => { c.castShadow = true; });
+  group.position.set(x, ty, z);
+  scene.add(group);
+  return group;
+}
+
+// Two team members standing on terrain, near the onshore area
+const person1 = createPerson(-8, 12, 0x2255aa, 0x333344); // Blue shirt
+const person2 = createPerson(-5, 10, 0xcc4422, 0x333344);  // Red shirt
+
+// Onshore clouds
+for (let i = 0; i < 14; i++) {
+  createCloud((hash(i * 61, i) - 0.5) * 140, 18 + hash(i, i * 67) * 15, (hash(i * 71, i * 73) - 0.5) * 140, 0xfff5e6);
+}
+
+// Offshore clouds (near the ship)
+for (let i = 0; i < 10; i++) {
+  createCloud((hash(i * 61 + 50, i) - 0.5) * 120, 20 + hash(i, i * 67 + 50) * 15, oceanZ + (hash(i * 71 + 50, i * 73) - 0.5) * 80, 0xd0dde8);
+}
+
+// Birds
+for (let i = 0; i < 8; i++) {
+  createBird((hash(i * 83, i * 89) - 0.5) * 60, 14 + hash(i * 97, i) * 10, (hash(i, i * 101) - 0.5) * 60);
+}
+
+// Seagulls near ocean
+for (let i = 0; i < 6; i++) {
+  createSeagull((hash(i * 83 + 100, i * 89) - 0.5) * 50, 10 + hash(i * 97 + 100, i) * 8, oceanZ + (hash(i, i * 101 + 100) - 0.5) * 40);
+}
+
+const particles = createParticles();
+
+// ─── CAMERA SETUP ───
+const onshoreCamPos = new THREE.Vector3(20, 18, 35);
+const onshoreLookAt = new THREE.Vector3(0, 4, 0);
+const offshoreCamPos = new THREE.Vector3(55, 15, oceanZ + 120);
+const offshoreLookAt = new THREE.Vector3(40, 0, oceanZ + 40);
+const underwaterCamPos = new THREE.Vector3(50, -18, oceanZ + 75);
+const underwaterLookAt = new THREE.Vector3(55, -22, oceanZ + 60);
+const teamCamPos = new THREE.Vector3(-2, 8, 18);
+const teamLookAt = new THREE.Vector3(-6, 6, 11);
+
+// Camera mode
+let cameraMode = 'onshore';
+let flightProgress = 0;
+let flightStartPos = new THREE.Vector3();
+let flightStartLook = new THREE.Vector3();
+let pendingUnderwater = false;
+let pendingOnshore = false;
+let pendingTeam = false;
+
+// Set initial camera
+camera.position.copy(onshoreCamPos);
+camera.lookAt(onshoreLookAt);
+
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+function startFlight() {
+  flightProgress = 0;
+  flightStartPos.copy(camera.position);
+  const lookDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  flightStartLook.copy(camera.position).add(lookDir);
+}
+
+// Trigger flight to offshore
+function flyToOffshore() {
+  if (cameraMode === 'onshore') {
+    cameraMode = 'flying-to-offshore';
+    startFlight();
+  }
+}
+
+// Trigger flight back to onshore
+function flyToOnshore() {
+  if (cameraMode === 'offshore') {
+    cameraMode = 'flying-to-onshore';
+    startFlight();
+  }
+}
+
+// Trigger descent to underwater
+function flyToUnderwater() {
+  if (cameraMode === 'offshore') {
+    cameraMode = 'flying-to-underwater';
+    startFlight();
+    document.querySelector('.services-left').classList.remove('visible');
+  } else if (cameraMode === 'onshore') {
+    flyToOffshore();
+    pendingUnderwater = true;
+  }
+}
+
+// Trigger ascent from underwater
+function flyToOffshoreFromUnderwater() {
+  if (cameraMode === 'underwater') {
+    cameraMode = 'flying-to-offshore-from-underwater';
+    startFlight();
+    document.querySelector('.projects-left').classList.remove('visible');
+  }
+}
+
+// Trigger flight to team view
+function flyToTeam() {
+  if (cameraMode === 'onshore') {
+    cameraMode = 'flying-to-team';
+    startFlight();
+    document.querySelector('.hero-content').classList.add('hidden');
+  } else if (cameraMode === 'offshore') {
+    flyToOnshore();
+    pendingTeam = true;
+  } else if (cameraMode === 'underwater') {
+    flyToOffshoreFromUnderwater();
+    pendingTeam = true;
+  }
+}
+
+// Trigger flight back from team
+function flyFromTeam() {
+  if (cameraMode === 'team') {
+    cameraMode = 'flying-from-team';
+    startFlight();
+    document.querySelector('.team-left').classList.remove('visible');
+  }
+}
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+// Scroll/wheel triggers section transitions
+let wheelCooldown = false;
+window.addEventListener('wheel', (e) => {
+  if (wheelCooldown) return;
+  if (Math.abs(e.deltaY) < 30) return;
+  wheelCooldown = true;
+  setTimeout(() => wheelCooldown = false, 1200);
+  if (e.deltaY > 0) {
+    // Scroll down
+    if (cameraMode === 'onshore') flyToOffshore();
+    else if (cameraMode === 'offshore') flyToUnderwater();
+  } else {
+    // Scroll up
+    if (cameraMode === 'underwater') flyToOffshoreFromUnderwater();
+    else if (cameraMode === 'offshore') flyToOnshore();
+  }
+}, { passive: true });
+
+// Nav link click handlers
+document.querySelector('a[href="#services"]').addEventListener('click', (e) => {
+  e.preventDefault();
+  contactOverlay.classList.remove('visible');
+  if (cameraMode === 'team') { flyFromTeam(); pendingUnderwater = true; }
+  else if (cameraMode === 'underwater') flyToOffshoreFromUnderwater();
+  else if (cameraMode !== 'offshore') flyToOffshore();
+});
+
+document.querySelector('a[href="#projects"]').addEventListener('click', (e) => {
+  e.preventDefault();
+  contactOverlay.classList.remove('visible');
+  if (cameraMode === 'team') { flyFromTeam(); pendingUnderwater = true; }
+  else if (cameraMode === 'offshore') flyToUnderwater();
+  else if (cameraMode !== 'underwater') { flyToOffshore(); pendingUnderwater = true; }
+});
+
+document.querySelector('a[href="#team"]').addEventListener('click', (e) => {
+  e.preventDefault();
+  contactOverlay.classList.remove('visible');
+  if (cameraMode === 'underwater') flyToTeam();
+  else if (cameraMode === 'offshore') { flyToOnshore(); pendingTeam = true; }
+  else if (cameraMode !== 'team') flyToTeam();
+});
+
+// Logo click to go back to onshore
+document.querySelector('.nav-logo').addEventListener('click', (e) => {
+  e.preventDefault();
+  // Close contact overlay if open
+  if (contactOverlay.classList.contains('visible')) {
+    contactOverlay.classList.remove('visible');
+    return;
+  }
+  if (cameraMode === 'team') flyFromTeam();
+  else if (cameraMode === 'underwater') {
+    flyToOffshoreFromUnderwater();
+    pendingOnshore = true;
+  } else if (cameraMode !== 'onshore') {
+    flyToOnshore();
+  }
+});
+
+// Scroll hint click — advance to next section
+document.getElementById('scroll-hint').addEventListener('click', () => {
+  if (cameraMode === 'onshore') flyToOffshore();
+  else if (cameraMode === 'offshore') flyToUnderwater();
+  else if (cameraMode === 'underwater') flyToTeam();
+});
+
+// Contact overlay
+const contactOverlay = document.getElementById('contact-overlay');
+const contactClose = document.querySelector('.contact-close');
+
+document.querySelector('.nav-cta').addEventListener('click', (e) => {
+  e.preventDefault();
+  contactOverlay.classList.add('visible');
+});
+
+contactClose.addEventListener('click', () => {
+  contactOverlay.classList.remove('visible');
+});
+
+contactOverlay.querySelector('.contact-overlay-bg').addEventListener('click', () => {
+  contactOverlay.classList.remove('visible');
+  // Return to current section - camera mode unchanged, just close overlay
+});
+
+// Page Down / Page Up / Arrow Down / Arrow Up trigger section transitions
+document.addEventListener('keydown', e => {
+  // Close overlay first if open
+  if (contactOverlay.classList.contains('visible')) {
+    if (e.key === 'Escape' || e.key === 'PageDown' || e.key === 'PageUp' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      contactOverlay.classList.remove('visible');
+    }
+    return;
+  }
+  
+  if (e.key === 'PageDown' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (cameraMode === 'onshore') flyToOffshore();
+    else if (cameraMode === 'offshore') flyToUnderwater();
+    else if (cameraMode === 'underwater') flyToTeam();
+    else if (cameraMode === 'team') flyFromTeam(); // Loop back to start
+  } else if (e.key === 'PageUp' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (cameraMode === 'team') flyFromTeam();
+    else if (cameraMode === 'underwater') flyToOffshoreFromUnderwater();
+    else if (cameraMode === 'offshore') flyToOnshore();
+  } else if (e.key === 'Escape') {
+    // Do nothing - let overlay handler deal with it
+  }
+});
+
+// ─── ANIMATION LOOP ───
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  
+  // Spin turbine rotors
+  turbines.forEach((tb, i) => { if (tb.rotorPivot) tb.rotorPivot.rotation.z -= (0.012 + i * 0.002); });
+  
+  // Clouds drift
+  clouds.forEach((c, i) => { c.position.x += 0.008 * (1 + i * 0.15); if (c.position.x > 80) c.position.x = -80; });
+  
+  // Birds
+  birds.forEach(b => {
+    const d = b.userData;
+    d.angle += d.speed * 0.01;
+    b.position.set(Math.cos(d.angle) * d.radius, d.baseY + Math.sin(t * 0.5 + d.angle) * 1.5, Math.sin(d.angle) * d.radius);
+    b.rotation.y = -d.angle + Math.PI / 2;
+    b.children[0].rotation.z = 0.3 + Math.sin(t * d.flapSpeed) * 0.4;
+    b.children[1].rotation.z = -0.3 - Math.sin(t * d.flapSpeed) * 0.4;
+  });
+  
+  // Seagulls
+  seagulls.forEach(b => {
+    const d = b.userData;
+    d.angle += d.speed * 0.01;
+    b.position.x = Math.cos(d.angle) * d.radius;
+    b.position.y = d.baseY + Math.sin(t * 0.6 + d.angle) * 1;
+    b.position.z = oceanZ + Math.sin(d.angle) * d.radius;
+    b.rotation.y = -d.angle + Math.PI / 2;
+    b.children[0].rotation.z = 0.4 + Math.sin(t * d.flapSpeed) * 0.3;
+    b.children[1].rotation.z = -0.4 - Math.sin(t * d.flapSpeed) * 0.3;
+  });
+  
+  // Particles
+  const pp = particles.geometry.attributes.position.array;
+  for (let i = 0; i < pp.length; i += 3) {
+    pp[i] += Math.sin(t * 0.3 + i) * 0.004;
+    pp[i + 1] += Math.sin(t * 0.5 + i * 0.1) * 0.002;
+    pp[i + 2] += Math.cos(t * 0.2 + i) * 0.003;
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+  
+  // Animate ocean waves - proper undulation like index-reference
+  const oceanPos = ocean.geometry.attributes.position;
+  for (let i = 0; i < oceanPos.count; i++) {
+    const x = oceanPos.getX(i), z = oceanPos.getZ(i);
+    const waveH = Math.sin(x*0.08 + t*0.8)*0.4 + Math.sin(z*0.06 + t*0.6)*0.3 + Math.sin((x+z)*0.12 + t*1.2)*0.15;
+    oceanPos.setY(i, waveH);
+  }
+  oceanPos.needsUpdate = true;
+  ocean.geometry.computeVertexNormals();
+  
+  // Get wave height at ship position for proper bobbing - rises and falls WITH the water
+  const shipX = ship.position.x;
+  const shipZ = ship.position.z;
+  const waveHeight = Math.sin(shipX*0.08 + t*0.8)*0.4 + Math.sin(shipZ*0.06 + t*0.6)*0.3 + Math.sin((shipX+shipZ)*0.12 + t*1.2)*0.15;
+  ship.position.y = -2 + waveHeight + 1.2; // Base ocean y (-2) + wave height + offset so hull sits in water
+  // Tilt ship with wave slope
+  const waveSlopeX = Math.cos(shipX*0.08 + t*0.8)*0.08*0.4 + Math.cos((shipX+shipZ)*0.12 + t*1.2)*0.12*0.15;
+  const waveSlopeZ = Math.cos(shipZ*0.06 + t*0.6)*0.06*0.3 + Math.cos((shipX+shipZ)*0.12 + t*1.2)*0.12*0.15;
+  ship.rotation.x = -waveSlopeZ + Math.sin(t*0.5)*0.01;
+  ship.rotation.z = waveSlopeX + Math.sin(t*0.8)*0.01;
+  
+  // ─── CAMERA ANIMATION ───
+  if (cameraMode === 'flying-to-offshore') {
+    flightProgress += 0.0085;
+    if (flightProgress >= 1) flightProgress = 1;
+    const eased = easeInOutCubic(flightProgress);
+    camera.position.lerpVectors(flightStartPos, offshoreCamPos, eased);
+    const smoothedLookAt = new THREE.Vector3().lerpVectors(flightStartLook, offshoreLookAt, eased);
+    camera.lookAt(smoothedLookAt);
+    if (flightProgress >= 1 && cameraMode === 'flying-to-offshore') {
+      cameraMode = 'offshore';
+      document.querySelector('.services-left').classList.add('visible');
+      document.querySelector('.hero-content').classList.add('hidden');
+      history.pushState(null, null, '#services');
+      if (pendingUnderwater) {
+        pendingUnderwater = false;
+        flyToUnderwater();
+      }
+    }
+
+  } else if (cameraMode === 'flying-to-onshore') {
+    flightProgress += 0.0085;
+    if (flightProgress >= 1) flightProgress = 1;
+    const eased = easeInOutCubic(flightProgress);
+    camera.position.lerpVectors(flightStartPos, onshoreCamPos, eased);
+    const smoothedLookAt = new THREE.Vector3().lerpVectors(flightStartLook, onshoreLookAt, eased);
+    camera.lookAt(smoothedLookAt);
+    if (flightProgress >= 1 && cameraMode === 'flying-to-onshore') {
+      cameraMode = 'onshore';
+      document.querySelector('.services-left').classList.remove('visible');
+      document.querySelector('.projects-left').classList.remove('visible');
+      if (pendingTeam) {
+        pendingTeam = false;
+        flyToTeam();
+      } else {
+        document.querySelector('.hero-content').classList.remove('hidden');
+        history.pushState(null, null, '#');
+        updateEnvironment(0);
+      }
+    }
+
+  } else if (cameraMode === 'flying-to-underwater') {
+    flightProgress += 0.0055;
+    if (flightProgress >= 1) flightProgress = 1;
+    const eased = easeInOutCubic(flightProgress);
+    camera.position.lerpVectors(flightStartPos, underwaterCamPos, eased);
+    const smoothedLookAt = new THREE.Vector3().lerpVectors(flightStartLook, underwaterLookAt, eased);
+    camera.lookAt(smoothedLookAt);
+
+    // Environment blend driven by camera depth below surface
+    const surfaceY = -2;
+    const depthRange = Math.abs(underwaterCamPos.y - surfaceY);
+    const currentDepth = Math.max(0, surfaceY - camera.position.y);
+    const uwBlend = Math.min(1, currentDepth / (depthRange * 0.6));
+    updateEnvironment(uwBlend);
+
+    // Projects UI fades in before camera settles
+    if (flightProgress >= 0.75 && !document.querySelector('.projects-left').classList.contains('visible')) {
+      document.querySelector('.projects-left').classList.add('visible');
+    }
+    if (flightProgress >= 1 && cameraMode === 'flying-to-underwater') {
+      cameraMode = 'underwater';
+      history.pushState(null, null, '#projects');
+      updateEnvironment(1);
+    }
+
+  } else if (cameraMode === 'flying-to-offshore-from-underwater') {
+    flightProgress += 0.0055;
+    if (flightProgress >= 1) flightProgress = 1;
+    const eased = easeInOutCubic(flightProgress);
+    camera.position.lerpVectors(flightStartPos, offshoreCamPos, eased);
+    const smoothedLookAt = new THREE.Vector3().lerpVectors(flightStartLook, offshoreLookAt, eased);
+    camera.lookAt(smoothedLookAt);
+
+    // Environment blend reverses as camera ascends
+    const surfaceY = -2;
+    const depthRange = Math.abs(underwaterCamPos.y - surfaceY);
+    const currentDepth = Math.max(0, surfaceY - camera.position.y);
+    const uwBlend = Math.min(1, currentDepth / (depthRange * 0.6));
+    updateEnvironment(uwBlend);
+
+    if (flightProgress >= 1 && cameraMode === 'flying-to-offshore-from-underwater') {
+      cameraMode = 'offshore';
+      updateEnvironment(0);
+      if (pendingTeam) {
+        pendingTeam = false;
+        flyToTeam();
+      } else if (pendingOnshore) {
+        pendingOnshore = false;
+        flyToOnshore();
+      } else {
+        document.querySelector('.services-left').classList.add('visible');
+        history.pushState(null, null, '#services');
+      }
+    }
+
+  } else if (cameraMode === 'flying-to-team') {
+    flightProgress += 0.0085;
+    if (flightProgress >= 1) flightProgress = 1;
+    const eased = easeInOutCubic(flightProgress);
+    camera.position.lerpVectors(flightStartPos, teamCamPos, eased);
+    const smoothedLookAt = new THREE.Vector3().lerpVectors(flightStartLook, teamLookAt, eased);
+    camera.lookAt(smoothedLookAt);
+    if (flightProgress >= 1 && cameraMode === 'flying-to-team') {
+      cameraMode = 'team';
+      document.querySelector('.team-left').classList.add('visible');
+      history.pushState(null, null, '#team');
+    }
+
+  } else if (cameraMode === 'flying-from-team') {
+    flightProgress += 0.0085;
+    if (flightProgress >= 1) flightProgress = 1;
+    const eased = easeInOutCubic(flightProgress);
+    camera.position.lerpVectors(flightStartPos, onshoreCamPos, eased);
+    const smoothedLookAt = new THREE.Vector3().lerpVectors(flightStartLook, onshoreLookAt, eased);
+    camera.lookAt(smoothedLookAt);
+    if (flightProgress >= 1 && cameraMode === 'flying-from-team') {
+      cameraMode = 'onshore';
+      document.querySelector('.hero-content').classList.remove('hidden');
+      history.pushState(null, null, '#');
+    }
+
+  } else {
+    // Idle orbit for all scenes
+    let basePos, baseLookAt;
+    if (cameraMode === 'onshore') {
+      basePos = onshoreCamPos;
+      baseLookAt = onshoreLookAt;
+    } else if (cameraMode === 'offshore') {
+      basePos = offshoreCamPos;
+      baseLookAt = offshoreLookAt;
+    } else if (cameraMode === 'team') {
+      basePos = teamCamPos;
+      baseLookAt = teamLookAt;
+    } else {
+      basePos = underwaterCamPos;
+      baseLookAt = underwaterLookAt;
+    }
+
+    const isUnderwater = cameraMode === 'underwater';
+    const isTeam = cameraMode === 'team';
+    const orbitSpeed = isUnderwater ? 0.03 : (isTeam ? 0.02 : 0.08);
+    const orbitRadius = isUnderwater ? 20 : (isTeam ? 3 : 40);
+    const pScale = isUnderwater ? 0.4 : (isTeam ? 0.3 : 1.0);
+    const bobAmp = isUnderwater ? 1 : (isTeam ? 0.5 : 3);
+
+    const ca = t * orbitSpeed, cr = orbitRadius;
+    const orbitX = Math.cos(ca) * cr + mouseX * 5 * pScale;
+    const orbitZ = Math.sin(ca) * cr + mouseY * 3 * pScale;
+    const orbitY = basePos.y + Math.sin(t * 0.12) * bobAmp - mouseY * 2 * pScale;
+
+    const tx = basePos.x + orbitX * 0.5;
+    const tz = basePos.z + orbitZ * 0.3;
+    camera.position.x += (tx - camera.position.x) * 0.02;
+    camera.position.y += (orbitY - camera.position.y) * 0.02;
+    camera.position.z += (tz - camera.position.z) * 0.02;
+    camera.lookAt(baseLookAt.x + mouseX * 2 * pScale, baseLookAt.y, baseLookAt.z);
+  }
+  
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─── SERVICES SLIDER ───
+const sliderTrack = document.getElementById('slider-track');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const dotsContainer = document.getElementById('slider-dots');
+const currentSlideEl = document.getElementById('current-slide');
+const totalSlides = 6;
+let currentSlide = 0;
+
+for (let i = 0; i < totalSlides; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+  dot.addEventListener('click', () => goToSlide(i));
+  dotsContainer.appendChild(dot);
+}
+
+function updateSlider() {
+  sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+  prevBtn.disabled = currentSlide === 0;
+  nextBtn.disabled = currentSlide === totalSlides - 1;
+  dotsContainer.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+  if (currentSlideEl) currentSlideEl.textContent = currentSlide + 1;
+}
+
+function goToSlide(n) {
+  currentSlide = Math.max(0, Math.min(totalSlides - 1, n));
+  updateSlider();
+}
+
+prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+let touchStartX = 0;
+sliderTrack.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+sliderTrack.addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) goToSlide(currentSlide + 1);
+    else goToSlide(currentSlide - 1);
+  }
+});
+
+updateSlider();
+
+// ─── PROJECTS SLIDER ───
+const projectsSliderTrack = document.getElementById('projects-slider-track');
+const projectsPrevBtn = document.getElementById('projects-prev-btn');
+const projectsNextBtn = document.getElementById('projects-next-btn');
+const projectsDotsContainer = document.getElementById('projects-slider-dots');
+const projectsCurrentSlideEl = document.getElementById('projects-current-slide');
+const totalProjectSlides = 4;
+let currentProjectSlide = 0;
+
+for (let i = 0; i < totalProjectSlides; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+  dot.addEventListener('click', () => goToProjectSlide(i));
+  projectsDotsContainer.appendChild(dot);
+}
+
+function updateProjectsSlider() {
+  projectsSliderTrack.style.transform = `translateX(-${currentProjectSlide * 100}%)`;
+  projectsPrevBtn.disabled = currentProjectSlide === 0;
+  projectsNextBtn.disabled = currentProjectSlide === totalProjectSlides - 1;
+  projectsDotsContainer.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === currentProjectSlide));
+  if (projectsCurrentSlideEl) projectsCurrentSlideEl.textContent = currentProjectSlide + 1;
+}
+
+function goToProjectSlide(n) {
+  currentProjectSlide = Math.max(0, Math.min(totalProjectSlides - 1, n));
+  updateProjectsSlider();
+}
+
+projectsPrevBtn.addEventListener('click', () => goToProjectSlide(currentProjectSlide - 1));
+projectsNextBtn.addEventListener('click', () => goToProjectSlide(currentProjectSlide + 1));
+
+let projectsTouchStartX = 0;
+projectsSliderTrack.addEventListener('touchstart', e => projectsTouchStartX = e.touches[0].clientX);
+projectsSliderTrack.addEventListener('touchend', e => {
+  const diff = projectsTouchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) goToProjectSlide(currentProjectSlide + 1);
+    else goToProjectSlide(currentProjectSlide - 1);
+  }
+});
+
+updateProjectsSlider();
+
+// Keyboard navigation for sliders
+document.addEventListener('keydown', e => {
+  if (document.querySelector('.projects-left').classList.contains('visible')) {
+    if (e.key === 'ArrowLeft') goToProjectSlide(currentProjectSlide - 1);
+    if (e.key === 'ArrowRight') goToProjectSlide(currentProjectSlide + 1);
+  } else if (document.querySelector('.services-left').classList.contains('visible')) {
+    if (e.key === 'ArrowLeft') goToSlide(currentSlide - 1);
+    if (e.key === 'ArrowRight') goToSlide(currentSlide + 1);
+  }
+});
+
+// Handle URL hash on load
+if (window.location.hash === '#services') {
+  setTimeout(() => flyToOffshore(), 500);
+} else if (window.location.hash === '#projects') {
+  setTimeout(() => { flyToOffshore(); pendingUnderwater = true; }, 500);
+}
+
+// ─── TEAM SLIDER ───
+const teamSliderTrack = document.getElementById('team-slider-track');
+const teamPrevBtn = document.getElementById('team-prev-btn');
+const teamNextBtn = document.getElementById('team-next-btn');
+const teamDotsContainer = document.getElementById('team-slider-dots');
+const teamCurrentSlideEl = document.getElementById('team-current-slide');
+const teamTotalSlides = 2;
+let teamCurrentSlide = 0;
+
+for (let i = 0; i < teamTotalSlides; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+  dot.addEventListener('click', () => goToTeamSlide(i));
+  teamDotsContainer.appendChild(dot);
+}
+
+function updateTeamSlider() {
+  teamSliderTrack.style.transform = `translateX(-${teamCurrentSlide * 100}%)`;
+  teamPrevBtn.disabled = teamCurrentSlide === 0;
+  teamNextBtn.disabled = teamCurrentSlide === teamTotalSlides - 1;
+  teamDotsContainer.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === teamCurrentSlide));
+  if (teamCurrentSlideEl) teamCurrentSlideEl.textContent = teamCurrentSlide + 1;
+}
+
+function goToTeamSlide(n) {
+  teamCurrentSlide = Math.max(0, Math.min(teamTotalSlides - 1, n));
+  updateTeamSlider();
+}
+
+teamPrevBtn.addEventListener('click', () => goToTeamSlide(teamCurrentSlide - 1));
+teamNextBtn.addEventListener('click', () => goToTeamSlide(teamCurrentSlide + 1));
+
+teamSliderTrack.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+teamSliderTrack.addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) goToTeamSlide(teamCurrentSlide + 1);
+    else goToTeamSlide(teamCurrentSlide - 1);
+  }
+});
+
+// Handle back/forward buttons
+window.addEventListener('hashchange', () => {
+  const hash = window.location.hash;
+  if (hash === '#services') {
+    if (cameraMode === 'underwater') flyToOffshoreFromUnderwater();
+    else if (cameraMode === 'onshore') flyToOffshore();
+    else if (cameraMode === 'team') flyFromTeam();
+  } else if (hash === '#projects') {
+    if (cameraMode === 'offshore') flyToUnderwater();
+    else if (cameraMode === 'onshore') { flyToOffshore(); pendingUnderwater = true; }
+    else if (cameraMode === 'team') { flyFromTeam(); pendingUnderwater = true; }
+  } else if (hash === '#team') {
+    if (cameraMode === 'underwater') { flyToOffshoreFromUnderwater(); pendingTeam = true; }
+    else if (cameraMode === 'offshore') { flyToOnshore(); pendingTeam = true; }
+    else if (cameraMode === 'onshore') flyToTeam();
+  } else {
+    if (cameraMode === 'team') flyFromTeam();
+    else if (cameraMode === 'offshore') flyToOnshore();
+    else if (cameraMode === 'underwater') { flyToOffshoreFromUnderwater(); pendingOnshore = true; }
+  }
+});
+</script>
+</body>
+</html>
