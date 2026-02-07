@@ -140,7 +140,7 @@
   .contact-item svg { width: 24px; height: 24px; flex-shrink: 0; }
 
   /* Scroll hint */
-  #scroll-hint { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; animation: fadeUp 1.2s ease-out 1.2s both; z-index: 20; pointer-events: auto; cursor: pointer; }
+  #scroll-hint { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; animation: fadeUp 1.2s ease-out 1.2s both; z-index: 20; pointer-events: auto; cursor: pointer; }
   #scroll-hint span { font-size: 0.7rem; letter-spacing: 0.5em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
   #scroll-hint .line { width: 1px; height: 40px; background: rgba(255,255,255,0.2); position: relative; overflow: hidden; }
   #scroll-hint .line::after { content: ''; position: absolute; top: -100%; left: 0; width: 1px; height: 100%; background: #3dd68c; animation: scrollLine 2s ease-in-out infinite; }
@@ -1895,7 +1895,6 @@ function goToSlide(n) {
 prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
 nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
 
-let touchStartX = 0;
 sliderTrack.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
 sliderTrack.addEventListener('touchend', e => {
   const diff = touchStartX - e.changedTouches[0].clientX;
