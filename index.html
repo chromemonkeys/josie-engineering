@@ -167,6 +167,7 @@
 <nav id="nav">
   <a href="#" class="nav-logo"><span class="mark"></span>Josie</a>
   <div class="nav-links">
+    <a href="#">Home</a>
     <a href="#services">Services</a>
     <a href="#projects">Projects</a>
     <a href="#team">Team</a>
@@ -1352,6 +1353,18 @@ window.addEventListener('wheel', (e) => {
 }, { passive: true });
 
 // Nav link click handlers
+document.querySelector('a[href="#"]').addEventListener('click', (e) => {
+  e.preventDefault();
+  contactOverlay.classList.remove('visible');
+  if (cameraMode === 'team') flyFromTeam();
+  else if (cameraMode === 'underwater') {
+    flyToOffshoreFromUnderwater();
+    pendingOnshore = true;
+  } else if (cameraMode === 'offshore') {
+    flyToOnshore();
+  }
+});
+
 document.querySelector('a[href="#services"]').addEventListener('click', (e) => {
   e.preventDefault();
   contactOverlay.classList.remove('visible');
@@ -1522,7 +1535,11 @@ function animate() {
       document.querySelector('.services-left').classList.add('visible');
       document.querySelector('.hero-content').classList.add('hidden');
       history.pushState(null, null, '#services');
-      if (pendingUnderwater) {
+      if (pendingTeam) {
+        pendingTeam = false;
+        flyToOnshore();
+        pendingTeam = true;
+      } else if (pendingUnderwater) {
         pendingUnderwater = false;
         flyToUnderwater();
       }
