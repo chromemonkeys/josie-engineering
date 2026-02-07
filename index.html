@@ -1232,9 +1232,9 @@ function createUnderwaterScene() {
   // Detailed crabs on seabed
   function createCrab(x, z, scale = 1) {
     const crab = new THREE.Group();
-    // Bright orange-red crabs for visibility against seabed
-    const shellColor = new THREE.Color().setHSL(0.03 + hash(x, z) * 0.06, 0.9, 0.55);
-    const legColor = new THREE.Color().setHSL(0.04 + hash(z, x) * 0.05, 0.85, 0.45);
+    // Bright orange-red crabs for visibility against seabed - neon bright
+    const shellColor = new THREE.Color(0xff4400); // Bright orange
+    const legColor = new THREE.Color(0xff2200); // Slightly redder
     
     // Carapace (main shell) - oval shape
     const carapace = new THREE.Mesh(
@@ -1361,13 +1361,19 @@ function createUnderwaterScene() {
   // Add crabs around the monopile where the camera is looking
   // Monopile is at x=60, z=oceanZ+60 (approx -340)
   for (let i = 0; i < 30; i++) {
-    // Place crabs very close to monopile base (3-8 units away)
+    // Place crabs very close to monopile base (2-6 units away)
     const angle = (i / 30) * Math.PI * 2 + hash(i * 17, i) * 0.3;
-    const radius = 3 + hash(i * 31, i * 47) * 5;
+    const radius = 2 + hash(i * 31, i * 47) * 4;
     const cx = 60 + Math.cos(angle) * radius;
     const cz = oceanZ + 60 + Math.sin(angle) * radius;
-    const scale = 0.4 + hash(i * 13, i) * 0.2; // Much larger crabs
-    ug.add(createCrab(cx, cz, scale));
+    const scale = 0.6 + hash(i * 13, i) * 0.3; // Even larger crabs
+    const crab = createCrab(cx, cz, scale);
+    crab.traverse((child) => {
+      if (child.isMesh && child.material) {
+        child.material.fog = false; // Disable fog on crabs so they're always visible
+      }
+    });
+    ug.add(crab);
   }
 
   scene.add(ug);
