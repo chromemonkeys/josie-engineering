@@ -43,9 +43,9 @@
   #projects { }
   #team { }
   
-  /* Hero content */
+  /* Hero content - positioned 2/3 down the page */
   .hero-content {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    position: fixed; top: 66.67%; left: 50%; transform: translate(-50%, -50%);
     z-index: 20; text-align: center; pointer-events: none;
     transition: opacity 1.6s ease;
   }
@@ -147,9 +147,59 @@
   @keyframes scrollLine { 0% { top: -100%; } 50% { top: 100%; } 100% { top: 100%; } }
   
   /* Mobile */
+  /* Mobile hamburger menu styles */
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 101;
+  }
+  .nav-toggle span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: #fff;
+    transition: all 0.3s;
+  }
+  .nav-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+  .nav-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+  }
+
   @media (max-width: 768px) {
     nav { padding: 16px 20px; }
-    .nav-links { display: none; }
+    .nav-toggle { display: flex; }
+    .nav-links {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(12, 15, 19, 0.98);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 32px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 100;
+    }
+    .nav-links.active {
+      transform: translateX(0);
+      display: flex;
+    }
+    .nav-links a {
+      font-size: 1.2rem;
+    }
     .services-left { width: 100%; padding: 100px 24px 40px; height: auto; }
     .projects-left { width: 100%; padding: 100px 24px 40px; height: auto; }
     .team-left { width: 100%; padding: 100px 24px 40px; height: auto; }
@@ -166,6 +216,11 @@
 
 <nav id="nav">
   <a href="#" class="nav-logo"><span class="mark"></span>Josie</a>
+  <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
   <div class="nav-links">
     <a href="#">Home</a>
     <a href="#services">Services</a>
@@ -1460,6 +1515,64 @@ document.getElementById('scroll-hint').addEventListener('click', () => {
   else if (cameraMode === 'offshore') flyToUnderwater();
   else if (cameraMode === 'underwater') flyToTeam();
 });
+
+// Hamburger menu toggle
+const navToggle = document.querySelector('.nav-toggle');
+const navLinks = document.querySelector('.nav-links');
+
+navToggle.addEventListener('click', () => {
+  const isActive = navLinks.classList.toggle('active');
+  navToggle.classList.toggle('active');
+  navToggle.setAttribute('aria-expanded', isActive);
+});
+
+// Close mobile menu when a link is clicked
+navLinks.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    navLinks.classList.remove('active');
+    navToggle.classList.remove('active');
+    navToggle.setAttribute('aria-expanded', 'false');
+  });
+});
+
+// Touch swipe gestures for mobile navigation
+let touchStartY = 0;
+let touchStartX = 0;
+let touchCooldown = false;
+
+document.addEventListener('touchstart', (e) => {
+  touchStartY = e.touches[0].clientY;
+  touchStartX = e.touches[0].clientX;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  if (touchCooldown) return;
+  
+  const touchEndY = e.changedTouches[0].clientY;
+  const touchEndX = e.changedTouches[0].clientX;
+  const deltaY = touchStartY - touchEndY;
+  const deltaX = touchStartX - touchEndX;
+  
+  // Only handle vertical swipes (abs(deltaY) > abs(deltaX))
+  // and ignore if horizontal swipe is dominant (for slider interactions)
+  if (Math.abs(deltaY) < Math.abs(deltaX)) return;
+  if (Math.abs(deltaY) < 50) return; // Minimum swipe distance
+  
+  touchCooldown = true;
+  setTimeout(() => touchCooldown = false, 1200);
+  
+  if (deltaY > 0) {
+    // Swipe up - go to next section
+    if (cameraMode === 'onshore') flyToOffshore();
+    else if (cameraMode === 'offshore') flyToUnderwater();
+    else if (cameraMode === 'underwater') flyToTeam();
+  } else {
+    // Swipe down - go to previous section
+    if (cameraMode === 'team') flyFromTeam();
+    else if (cameraMode === 'underwater') flyToOffshoreFromUnderwater();
+    else if (cameraMode === 'offshore') flyToOnshore();
+  }
+}, { passive: true });
 
 // Contact overlay
 const contactOverlay = document.getElementById('contact-overlay');
