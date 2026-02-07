@@ -1358,23 +1358,36 @@ function createUnderwaterScene() {
     return crab;
   }
   
-  // Add crabs around the monopile where the camera is looking
-  // Monopile is at x=60, z=oceanZ+60 (approx -340)
+  // DEBUG: Add one giant test crab RIGHT at camera look position
+  // Camera looks at (55, -22, oceanZ+60) = (55, -22, -325)
+  // Place test crab at (55, -23, oceanZ+60) - directly in front of camera
+  const testCrab = createCrab(55, oceanZ + 60, 3.0); // Scale 3.0 = GIANT
+  testCrab.traverse((child) => {
+    if (child.isMesh) {
+      child.material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Bright red, unlit
+      child.material.fog = false;
+    }
+  });
+  ug.add(testCrab);
+  console.log('DEBUG: Added GIANT test crab at:', 55, -23.8, oceanZ + 60);
+  
+  // Add crabs around the monopile
+  console.log('DEBUG: Adding 30 crabs around monopile at x=60, z=' + (oceanZ + 60));
   for (let i = 0; i < 30; i++) {
-    // Place crabs very close to monopile base (2-6 units away)
     const angle = (i / 30) * Math.PI * 2 + hash(i * 17, i) * 0.3;
     const radius = 2 + hash(i * 31, i * 47) * 4;
     const cx = 60 + Math.cos(angle) * radius;
     const cz = oceanZ + 60 + Math.sin(angle) * radius;
-    const scale = 0.6 + hash(i * 13, i) * 0.3; // Even larger crabs
+    const scale = 1.0 + hash(i * 13, i) * 0.5; // HUGE crabs
     const crab = createCrab(cx, cz, scale);
     crab.traverse((child) => {
       if (child.isMesh && child.material) {
-        child.material.fog = false; // Disable fog on crabs so they're always visible
+        child.material.fog = false;
       }
     });
     ug.add(crab);
   }
+  console.log('DEBUG: Finished adding crabs');
 
   scene.add(ug);
   return ug;
