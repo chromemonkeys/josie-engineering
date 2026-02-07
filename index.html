@@ -1360,9 +1360,9 @@ function createUnderwaterScene() {
   
   // Add crabs around the monopile where the camera is looking
   // Monopile is at x=60, z=oceanZ+60 (approx -340)
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 30; i++) {
     // Place crabs very close to monopile base (3-8 units away)
-    const angle = (i / 5) * Math.PI * 2 + hash(i * 17, i) * 0.3;
+    const angle = (i / 30) * Math.PI * 2 + hash(i * 17, i) * 0.3;
     const radius = 3 + hash(i * 31, i * 47) * 5;
     const cx = 60 + Math.cos(angle) * radius;
     const cz = oceanZ + 60 + Math.sin(angle) * radius;
